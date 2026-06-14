@@ -31,3 +31,10 @@ class WhiteNoise:
     def __call__(self, taus1, taus2):
         diff = taus1[:, None] - taus2[None, :]
         return self.output_scale * (diff==0).astype(float)
+
+class AdditiveKernel:
+    def __init__(self, kernel1, kernel2):
+        self.kernel1 = kernel1
+        self.kernel2 = kernel2
+    def __call__(self, taus1, taus2):
+        return self.kernel1(taus1, taus2) + self.kernel2(taus1, taus2)
