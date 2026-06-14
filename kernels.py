@@ -26,4 +26,8 @@ class Matern52:
         return self.output_scale * (1+sqrt5_r + (5/3) * r**2) * np.exp(-sqrt5_r)
 
 class WhiteNoise:
-    
+    def __init__(self, output_scale=1.0):
+        self.output_scale = output_scale
+    def __call__(self, taus1, taus2):
+        diff = taus1[:, None] - taus2[None, :]
+        return self.output_scale * (diff==0).astype(float)
