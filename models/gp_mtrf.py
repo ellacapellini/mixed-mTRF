@@ -17,9 +17,6 @@ class GPmTRF:
         """block-diagonal prior covariance over all TRF weights"""
         K_single = self.kernel(self.lags, self.lags)  # (n_lags, n_lags)
         K = np.kron(np.eye(n_features), K_single)
-        # Numerical jitter: adds 1e-6 to diagonal to prevent
-        # K from being exactly singular due to floating-point errors.
-        # Safe because 1e-6 << typical eigenvalues of K.
         return K + 1e-6 * np.eye(K.shape[0])
 
 
