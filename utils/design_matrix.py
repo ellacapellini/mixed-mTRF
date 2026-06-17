@@ -5,9 +5,9 @@ def build_design_matrix(stimulus, lags, fill_value=0.0):
     X = np.full((n_times, n_lags), fill_value)
     
     for i, lag in enumerate(lags):
-        if lag >= 0: #positive lag: shift stim back in time -> brain at time t responds to stimulus at t-lag
+        if lag >= 0: #pos lag: shift stim back in time -> brain at time t responds to stimulus at t-lag
             X[lag:, i] = stimulus[:n_times - lag]
-        else:  #negative lag: shift stim forward -> capture brain activity that precedes stim
+        else:  #neg lag: shift stim forward -> capture brain activity that precedes stim
             X[:, n_times + lag, i] = stimulus[-lag:]
     return X
 
