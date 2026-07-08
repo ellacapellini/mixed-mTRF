@@ -28,7 +28,3 @@ surprisal shifts the N400?
 
 ## Literature
 Papers I'm reading for this project are tracked here: [[Google Sheets link](https://docs.google.com/spreadsheets/d/1s1F4kjrW1S360toRWma7SZhZf7wZuIoeAkWX1L1ZRWU/edit?usp=sharing)]
-
-## Lab
-[Neural Dynamics Lab](https://ndlab.ch) — INI, University of Zurich  
-Supervisor: Dr. Tim Piox
