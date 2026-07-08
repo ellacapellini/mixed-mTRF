@@ -45,5 +45,7 @@ def project_stimulus(
     return S_tilde
 
 def reconstruct_trf(
-    
-)
+    weights: np.darray,
+    Phi:np.darray,
+) -> np.darray:
+    return Phi@weights
