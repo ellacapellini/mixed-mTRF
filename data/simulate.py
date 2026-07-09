@@ -22,14 +22,14 @@ def simulate_trf_data(
     eeg_clean = np.zeros(n_times)
 
     for name in feature_names:
-        # Simulate sparse stim: random events at ~2Hz
+        #sim sparse stim: random events at ~2Hz
         # (≈ word onsets continuous speech)
         stim = np.zeros(n_times)
         event_times = rng.choice(n_times, size=int(2 * n_seconds), replace=False)
-        # Random amplit (≈ surprisal — not all words equally surprising)
+        #random amplit (≈ surprisal — not all words equally surprising)
         stim[event_times] = rng.exponential(scale=1.0, size=len(event_times))
         stimulus_features[name] = stim
-        # Ground truth TRF: N1 at ~100ms + P2 at ~200ms + N400 at ~400ms
+        #gorund truth TRF: N1 at ~100ms + P2 at ~200ms + N400 at ~400ms
         true_trf = _make_erp_trf(lag_times)
         true_trfs[name] = true_trf
         #convolve stim with TRF to get noise-free EEG contribution
