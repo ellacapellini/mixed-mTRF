@@ -28,7 +28,7 @@ from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
 
-from basis_functions import RaisedCosineBasis
+from basis.basis_functions import RaisedCosineBasis
 
 
 @dataclass(frozen=True)
@@ -121,7 +121,7 @@ def expand_word_level_to_samples(
 
 # Self-tests
 def _self_test() -> None:
-    from basis_functions import make_raised_cosine_basis
+    from basis.basis_functions import make_raised_cosine_basis
 
     dt = 10.0  # ms
     n_times = 500

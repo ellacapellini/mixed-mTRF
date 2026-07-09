@@ -11,7 +11,7 @@ class Matern52:
     def __init__(self, output_scale=1.0, length_scale=50.0):
         self.output_scale = output_scale
         self.length_scale = length_scale
-    def __call__(self, taus1, tau2):
+    def __call__(self, taus1, taus2):
         diff = taus1[:, None] - taus2[None, :]
         r = np.abs(diff)/self.length_scale
         sqrt5_r = np.sqrt(5)*r

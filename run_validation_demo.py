@@ -1,19 +1,22 @@
 from __future__ import annotations
 
+import os
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from basis_functions import make_raised_cosine_basis
+os.makedirs("figures", exist_ok=True)
+
+from basis.basis_functions import make_raised_cosine_basis
 from ground_truth import (
     make_stage1_static,
     make_stage2_amplitude_only,
     make_stage3_full_modulation,
 )
-from simulate import simulate_recording
-from design_matrix import DesignMatrix
-from mixed_trf import fit_ridge_mixed_trf
+from data.simulate import simulate_recording
+from utils.design_matrix import DesignMatrix
+from models.mixed_trf import fit_ridge_mixed_trf
 from metrics import train_test_split_contiguous, tf_parameter_recovery_error
 from derived_quantities import trf_at_surprisal, surprisal_sweep
 
@@ -82,7 +85,7 @@ def main():
         ax.legend(fontsize=8)
     axes[0].set_ylabel("h(tau)")
     plt.tight_layout()
-    plt.savefig("scratch_plots/02_true_vs_recovered_trf.png", dpi=130)
+    plt.savefig("figures/02_true_vs_recovered_trf.png", dpi=130)
     plt.close(fig)
 
     #fig 2: amplitude / latency / scale vs surprisal, true vs recovered
@@ -103,11 +106,11 @@ def main():
                 ax.set_xlabel("surprisal (bits)")
             ax.legend(fontsize=7)
     plt.tight_layout()
-    plt.savefig("scratch_plots/03_amplitude_latency_scale_vs_surprisal.png", dpi=130)
+    plt.savefig("figures/03_amplitude_latency_scale_vs_surprisal.png", dpi=130)
     plt.close(fig)
 
-    print("\nSaved: scratch_plots/02_true_vs_recovered_trf.png")
-    print("Saved: scratch_plots/03_amplitude_latency_scale_vs_surprisal.png")
+    print("\nSaved: figures/02_true_vs_recovered_trf.png")
+    print("Saved: figures/03_amplitude_latency_scale_vs_surprisal.png")
 
     #fnal assertions
     for res in results:
@@ -116,14 +119,14 @@ def main():
 
     # Stage-2-specific: latency/scale should be near-flat in BOTH true and recovered sweeps (the negative control should stay negative).
     sweep2_hat = surprisal_sweep(results[1]["fit"].mu_hat, results[1]["fit"].beta_hat, basis, surp_levels, tau)
-    lat_range2_hat = sweep2_hat["latency"].max() - sweep2_hat["latency"].min()
+    lat_range2_hat = np.nanmax(sweep2_hat["latency"]) - np.nanmin(sweep2_hat["latency"])
     assert lat_range2_hat < 15.0, (
         f"stage 2 recovered latency should stay ~flat, got range {lat_range2_hat:.1f}ms"
     )
 
     # Stage-3-specific: latency should shift meaningfully in the recovered fit too, not just in the ground truth (the positive control should stay positive after fitting).
     sweep3_hat = surprisal_sweep(results[2]["fit"].mu_hat, results[2]["fit"].beta_hat, basis, surp_levels, tau)
-    lat_range3_hat = sweep3_hat["latency"].max() - sweep3_hat["latency"].min()
+    lat_range3_hat = np.nanmax(sweep3_hat["latency"]) - np.nanmin(sweep3_hat["latency"])
     assert lat_range3_hat > 30.0, (
         f"stage 3 recovered latency shift too small: {lat_range3_hat:.1f}ms"
     )

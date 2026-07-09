@@ -1,3 +1,5 @@
+# this is mtrf.py
+
 import numpy as np
 
 class RidgemTRF:

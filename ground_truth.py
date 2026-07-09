@@ -18,7 +18,7 @@ from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
 
-from basis_functions import RaisedCosineBasis
+from basis.basis_functions import RaisedCosineBasis
 
 
 @dataclass
@@ -130,7 +130,7 @@ def add_hierarchical_random_effects(
 # Self-tests
 
 def _self_test() -> None:
-    from basis_functions import make_raised_cosine_basis
+    from basis.basis_functions import make_raised_cosine_basis
 
     rng = np.random.default_rng(1)
     basis = make_raised_cosine_basis(n_basis=10, tau_max=800.0, c=5.0)

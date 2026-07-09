@@ -8,8 +8,8 @@ from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
 
-from basis_functions import RaisedCosineBasis
-from design_matrix import build_design_matrix, expand_word_level_to_samples, DesignMatrix
+from basis.basis_functions import RaisedCosineBasis
+from utils.design_matrix import build_design_matrix, expand_word_level_to_samples, DesignMatrix
 from ground_truth import GroundTruthEffects
 
 
@@ -98,7 +98,7 @@ def simulate_recording(
 # Self-tests
 
 def _self_test() -> None:
-    from basis_functions import make_raised_cosine_basis
+    from basis.basis_functions import make_raised_cosine_basis
     from ground_truth import make_stage1_static
 
     rng = np.random.default_rng(2)

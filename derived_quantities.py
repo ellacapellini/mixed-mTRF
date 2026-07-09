@@ -7,7 +7,7 @@ h(tau | surp).
 from __future__ import annotations
 
 import numpy as np
-from basis_functions import RaisedCosineBasis
+from basis.basis_functions import RaisedCosineBasis
 
 
 def trf_at_surprisal(
@@ -57,12 +57,34 @@ def surprisal_sweep(
     basis: RaisedCosineBasis,
     surp_levels: np.ndarray,
     tau: np.ndarray,
+    min_relative_amplitude: float = 0.05,
 ) -> dict:
     """
     Compute A/latency/scale across a range of surprisal levels, for
     plotting against Lalor's Figure 3-style summary and for the
     stage-2-vs-stage-3 diagnostic: does amplitude alone change (gain
     control) or do latency/scale change too (predictive coding)?
+
+    Guard against a real numerical failure mode: if w(surp) = mu +
+    beta*surp is a scalar multiple of a single fixed shape (as in
+    stage 2's amplitude-only ground truth), that scalar can cross
+    zero at some surprisal level. The TRUE scale metric is scale-
+    invariant so it stays well-defined right through the crossing --
+    but any FITTED/recovered TRF has residual estimation error of
+    roughly constant absolute size, so right at the crossing (where
+    true amplitude -> 0) the recovered "shape" is dominated by that
+    residual error rather than signal, and scale (and to a lesser
+    extent latency) can blow up to something that looks like a real
+    effect but is actually just estimation noise inflated by a near-
+    zero denominator. This bit us in practice: a plain surprisal
+    sweep on a ridge-recovered stage-2 fit showed a spurious spike in
+    scale right at the amplitude zero-crossing.
+
+    Fix: flag latency/scale as unreliable (NaN) at any surprisal level
+    where amplitude falls below `min_relative_amplitude` times the
+    peak amplitude across the sweep. NaNs break the plotted line
+    rather than silently drawing a spike that looks like a real
+    latency/scale effect.
     """
     A_vals, lat_vals, scale_vals = [], [], []
     for s in surp_levels:
@@ -70,17 +92,28 @@ def surprisal_sweep(
         A_vals.append(out["amplitude"])
         lat_vals.append(out["latency"])
         scale_vals.append(out["scale"])
+
+    A_vals = np.asarray(A_vals)
+    lat_vals = np.asarray(lat_vals)
+    scale_vals = np.asarray(scale_vals)
+
+    peak_A = A_vals.max()
+    if peak_A > 1e-12:
+        unreliable = A_vals < (min_relative_amplitude * peak_A)
+        lat_vals = np.where(unreliable, np.nan, lat_vals)
+        scale_vals = np.where(unreliable, np.nan, scale_vals)
+
     return {
         "surp_levels": np.asarray(surp_levels),
-        "amplitude": np.asarray(A_vals),
-        "latency": np.asarray(lat_vals),
-        "scale": np.asarray(scale_vals),
+        "amplitude": A_vals,
+        "latency": lat_vals,
+        "scale": scale_vals,
     }
 
 
 # Self-tests
 def _self_test() -> None:
-    from basis_functions import make_raised_cosine_basis
+    from basis.basis_functions import make_raised_cosine_basis
     from ground_truth import make_stage2_amplitude_only, make_stage3_full_modulation
 
     rng = np.random.default_rng(7)
@@ -103,6 +136,50 @@ def _self_test() -> None:
     print(f"derived_quantities.py: stage 2 -- amplitude range {amp_range2:.3f}, "
           f"latency range {lat_range2:.6f} (expect ~0), "
           f"scale range {scale_range2:.6f} (expect ~0)")
+
+    # Regression test for the zero-crossing numerical artifact: sweep a
+    # DENSE grid across the region where the stage-2 gain factor
+    # (1 + gain*surp) crosses zero (gain=-0.3 -> crossing at surp=1/0.3),
+    # using slightly-perturbed (not exact) weights to simulate the kind
+    # of residual estimation error a real fit has. Confirm the masking
+    # guard actually suppresses the spike rather than letting it through.
+    # Regression test for the zero-crossing numerical artifact, using a
+    # REAL ridge-recovered fit (not hand-added noise) -- this is the
+    # actual scenario that broke: a plain surprisal sweep on a ridge fit
+    # of stage-2 synthetic data showed a spurious spike in scale right
+    # at the amplitude zero-crossing (gain=-0.3 -> crossing at surp=1/0.3
+    # = 3.33 bits). Confirm the masking guard suppresses it.
+    from data.simulate import simulate_recording
+    from utils.design_matrix import DesignMatrix
+    from models.mixed_trf import fit_ridge_mixed_trf
+    from metrics import train_test_split_contiguous
+
+    rng3 = np.random.default_rng(123)
+    basis10 = make_raised_cosine_basis(n_basis=10, tau_max=600.0, c=5.0)
+    tau10 = np.linspace(0, 600, 1201)
+    gt2_real = make_stage2_amplitude_only(basis10, rng3, gain=-0.3)
+    rec = simulate_recording(basis10, gt2_real, n_times=24000, dt=5.0, rng=rng3, snr_target=6.0)
+    train_idx, test_idx = train_test_split_contiguous(24000, test_fraction=0.2)
+    d_train = DesignMatrix(S0=rec.design.S0[train_idx], S1=rec.design.S1[train_idx], X=rec.design.X[train_idx])
+    d_test = DesignMatrix(S0=rec.design.S0[test_idx], S1=rec.design.S1[test_idx], X=rec.design.X[test_idx])
+    fit = fit_ridge_mixed_trf(d_train, rec.r[train_idx], d_test, rec.r[test_idx], n_basis=10, alpha=1.0)
+
+    dense_surp = np.sort(np.concatenate([np.linspace(0.0, 6.0, 13), np.linspace(3.0, 3.6, 61)]))
+    dense_sweep = surprisal_sweep(fit.mu_hat, fit.beta_hat, basis10, dense_surp, tau10)
+
+    n_nan = np.isnan(dense_sweep["scale"]).sum()
+    assert n_nan > 0, (
+        "expected the amplitude zero-crossing to trigger the unreliable-region "
+        "guard, but no points were masked -- guard may not be working"
+    )
+    valid_scale = dense_sweep["scale"][~np.isnan(dense_sweep["scale"])]
+    assert np.nanmax(valid_scale) < 100, (
+        f"masking guard let a blown-up scale value through: max={np.nanmax(valid_scale):.1f} "
+        "(expected values near true scale ~22, not >100)"
+    )
+    print(f"derived_quantities.py: zero-crossing guard masked {n_nan}/{len(dense_surp)} "
+          f"points near the amplitude sign-flip; remaining max scale = {np.nanmax(valid_scale):.2f} "
+          "(no spike leaking through)")
 
     #3 (full modulation): latency should ACTUALLY shift 
     gt3 = make_stage3_full_modulation(basis, rng)

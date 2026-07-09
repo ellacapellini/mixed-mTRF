@@ -9,7 +9,7 @@ import numpy as np
 from dataclasses import dataclass
 from sklearn.linear_model import Ridge
 
-from design_matrix import DesignMatrix
+from utils.design_matrix import DesignMatrix
 
 
 @dataclass
@@ -55,9 +55,9 @@ def fit_ridge_mixed_trf(
 
 # Self-tests
 def _self_test() -> None:
-    from basis_functions import make_raised_cosine_basis
+    from basis.basis_functions import make_raised_cosine_basis
     from ground_truth import make_stage1_static, make_stage2_amplitude_only
-    from simulate import simulate_recording
+    from data.simulate import simulate_recording
     from metrics import train_test_split_contiguous, tf_parameter_recovery_error
 
     rng = np.random.default_rng(42)
