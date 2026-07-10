@@ -16,7 +16,7 @@ from ground_truth import GroundTruthEffects
 @dataclass
 class SimulatedRecording:
     """
-    One simulated recording (single patient/electrode) + everything needed to fit a model on it and check recovery afterwards.
+    1 simulated recording (single patient/electrode) + everything needed to fit a model on it and check recovery afterwards.
     """
 
     r: np.ndarray                 # (n_times,) the "observed" LFP
@@ -65,9 +65,10 @@ def simulate_recording(
     electrode: int = 0,
     words_per_second: float = 3.0,
     snr_target: float = 3.0,
+    noise_type: str = "white",
 ) -> SimulatedRecording:
     """
-    Simulate one recording for a given patient/electrode.
+    Simulate 1 recording for a given patient/electrode.
     """
     stimulus = rng.normal(0, 1, size=n_times)  # e.g. speech envelope proxy
     word_onsets, word_surp = make_word_stream(n_times, dt, words_per_second, rng)
@@ -79,8 +80,26 @@ def simulate_recording(
     signal = design.S0 @ mu_eff + design.S1 @ beta_eff
 
     signal_sd = signal.std()
-    sigma_noise = signal_sd / snr_target if signal_sd > 1e-10 else 0.1
-    noise = rng.normal(0, sigma_noise, size=n_times)
+
+    if noise_type == "white":
+        sigma_noise = signal_sd / snr_target if signal_sd > 1e-10 else 0.1
+        noise = rng.normal(0, sigma_noise, size=n_times)
+    elif noise_type == "pink":
+        from neurodsp.sim import sim_powerlaw
+        fs = 1000.0 / dt  # dt is in ms, sim_powerlaw wants Hz
+        raw_pink = sim_powerlaw(
+            n_seconds=n_times / fs, fs=fs, exponent=-1.0,
+            **{"seed": int(rng.integers(0, 2**31 - 1))},
+        )
+        raw_pink = raw_pink[:n_times]  # guard off-by-one from rounding
+        # sim_powerlaw returns unit-ish variance; rescale to hit the same
+        # target SNR convention as the white-noise branch.
+        target_sigma = signal_sd / snr_target if signal_sd > 1e-10 else 0.1
+        noise = raw_pink * (target_sigma / raw_pink.std())
+        sigma_noise = float(noise.std())
+    else:
+        raise ValueError(f"unknown noise_type {noise_type!r}, expected 'white' or 'pink'")
+
     r = signal + noise
 
     return SimulatedRecording(
