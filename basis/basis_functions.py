@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class RaisedCosineBasis:
-    # fitted raised-cosine basis over a lag window.
+    #fit raised-cosine basis over a lag window
     n_basis: int
     tau_max: float
     centres: np.ndarray
