@@ -21,8 +21,8 @@ from metrics import train_test_split_contiguous, tf_parameter_recovery_error
 from derived_quantities import trf_at_surprisal, surprisal_sweep
 
 
-def run_stage(name, gt, basis, dt, n_times, rng, alpha=1.0, snr_target=6.0):
-    rec = simulate_recording(basis, gt, n_times, dt, rng, snr_target=snr_target)
+def run_stage(name, gt, basis, dt, n_times, rng, alpha=1.0, snr_target=6.0, noise_type="white"):
+    rec = simulate_recording(basis, gt, n_times, dt, rng, snr_target=snr_target, noise_type=noise_type)
     train_idx, test_idx = train_test_split_contiguous(n_times, test_fraction=0.2)
 
     d_train = DesignMatrix(
@@ -117,14 +117,14 @@ def main():
         assert res["fit"].r_test > 0.85, f"{res['name']}: held-out r too low ({res['fit'].r_test})"
         assert res["mu_err"]["normalised_rmse"] < 0.2, f"{res['name']}: mu recovery too poor"
 
-    # Stage-2-specific: latency/scale should be near-flat in BOTH true and recovered sweeps (the negative control should stay negative).
+    # Stage-2-specific: latency/scale should be near-flat in BOTH true and recovered sweeps (- control should stay -).
     sweep2_hat = surprisal_sweep(results[1]["fit"].mu_hat, results[1]["fit"].beta_hat, basis, surp_levels, tau)
     lat_range2_hat = np.nanmax(sweep2_hat["latency"]) - np.nanmin(sweep2_hat["latency"])
     assert lat_range2_hat < 15.0, (
         f"stage 2 recovered latency should stay ~flat, got range {lat_range2_hat:.1f}ms"
     )
 
-    # Stage-3-specific: latency should shift meaningfully in the recovered fit too, not just in the ground truth (the positive control should stay positive after fitting).
+    # Stage-3-specific: latency should shift meaningfully in the recovered fit too, not just in the ground truth (+ control should stay + after fitting).
     sweep3_hat = surprisal_sweep(results[2]["fit"].mu_hat, results[2]["fit"].beta_hat, basis, surp_levels, tau)
     lat_range3_hat = np.nanmax(sweep3_hat["latency"]) - np.nanmin(sweep3_hat["latency"])
     assert lat_range3_hat > 30.0, (
@@ -133,13 +133,12 @@ def main():
 
     print(f"\nStage 2 recovered latency range: {lat_range2_hat:.1f} ms (expect ~flat)")
     print(f"Stage 3 recovered latency range: {lat_range3_hat:.1f} ms (expect a real shift)")
-    print("\nALL VALIDATION CHECKS PASSED.")
+    print("\nALL VALIDATION CHECKS PASSED (white noise).")
     print("Ridge baseline correctly: (a) recovers static TRF shape, (b) recovers")
     print("amplitude-only modulation without hallucinating a latency shift, and")
     print("(c) recovers a genuine latency shift when the ground truth has one.")
-    
-    # Robustness check -> does recovery hold up under realistic 1/f (pink) observation noise, not just idealised white noise?
-    #use neurodsp's sim_powerlaw (Cole, Donogue et al. JOSS 2019) for noise term: stim itself stays white by desing 
+
+    #robustness check: does recovery hold up under realistic 1/f (pink)observation noise, not just idealised white noise? 
     print("\n--- Robustness check: white noise vs. realistic pink (1/f) noise ---")
     rng_pink = np.random.default_rng(123)
     pink_results = []
