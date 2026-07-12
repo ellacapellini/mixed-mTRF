@@ -137,6 +137,22 @@ def main():
     print("Ridge baseline correctly: (a) recovers static TRF shape, (b) recovers")
     print("amplitude-only modulation without hallucinating a latency shift, and")
     print("(c) recovers a genuine latency shift when the ground truth has one.")
+    
+    # Robustness check -> does recovery hold up under realistic 1/f (pink) observation noise, not just idealised white noise?
+    #use neurodsp's sim_powerlaw (Cole, Donogue et al. JOSS 2019) for noise term: stim itself stays white by desing 
+    print("\n--- Robustness check: white noise vs. realistic pink (1/f) noise ---")
+    rng_pink = np.random.default_rng(123)
+    pink_results = []
+    for name, gt in [("Stage 1", gt1), ("Stage 2", gt2), ("Stage 3", gt3)]:
+        r = run_stage(f"{name} (pink noise)", gt, basis, dt, n_times, rng_pink, noise_type="pink")
+        pink_results.append(r)
+
+    for white_res, pink_res, name in zip(results, pink_results, ["Stage 1", "Stage 2", "Stage 3"]):
+        white_r, pink_r = white_res["fit"].r_test, pink_res["fit"].r_test
+        print(f"{name}: held-out r = {white_r:.3f} (white) vs {pink_r:.3f} (pink)")
+        assert pink_r > 0.85, f"{name} under pink noise: held-out r too low ({pink_r:.3f})"
+
+    print("\nRecovery holds under realistic 1/f noise, not just idealised white noise.")
 
 
 if __name__ == "__main__":

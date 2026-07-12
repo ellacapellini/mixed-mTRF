@@ -3,12 +3,11 @@
 import numpy as np
 
 class RidgemTRF:
-    """ Standard  mTRF estimated via ridge regression
-    baseline model -> equivalent to a GP with white noise kernel (identity prior — all lagstreated as independent)."""
+    """ stand  mTRF estimated via ridge regression baseline model -> equivalent to a GP with white noise kernel (identity prior — all lagstreated as independent)."""
     def __init__(self, lags, alpha=1.0):
         self.lags = lags
         self.alpha = alpha
-        self.coef_ = None       #TRF weights after fitting, shape (n_lags * n_features,)
+        self.coef_ = None #TRF weights after fitting, shape (n_lags * n_features,)
         self.feature_slices_ = None
 
     def fit(self, X, y):
