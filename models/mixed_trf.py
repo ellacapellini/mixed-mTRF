@@ -14,9 +14,9 @@ from utils.design_matrix import DesignMatrix
 
 @dataclass
 class RidgeFitResult:
-    mu_hat: np.ndarray      #(n_basis,) estimated fixed-effect intercept weights
-    beta_hat: np.ndarray    # n_basis,) estimated fixed-effect surprisal slopes
-    alpha: float            # ridge regularisation strength used
+    mu_hat: np.ndarray #(n_basis,) estimated fixed-effect intercept weights
+    beta_hat: np.ndarray # n_basis,) estimated fixed-effect surprisal slopes
+    alpha: float  # ridge regularisation strength used
     r_train: float
     r_test: float
 

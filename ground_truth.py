@@ -1,16 +1,11 @@
 """
 generates known ground-truth TRF parameters (mu_j, beta_j, and
-optionally patient/electrode random effects) for the four-stage
+optionally patient/electrode random effects) for the 4-stage
 synthetic validation plan in Objective 1:
-
-  stage 1: static TRF recovery            -> beta_j = 0, no random effects
-  stage 2: amplitude-only modulation      -> beta_j = k * mu_j (negative
-                                              control: same shape at every
-                                              surprisal level, only scaled)
-  stage 3: full amplitude-latency-scale   -> beta_j independent per basis,
-            modulation (positive control)    reshapes the TRF, not just scales
-  stage 4: multi-patient/electrode        -> stage 3 + random intercepts/
-            hierarchical recovery            slopes per patient & electrode
+stage 1: static TRF recovery -> beta_j = 0, no random effects
+stage 2: amplitude-only modulation -> beta_j = k * mu_j (negative control: same shape at everysurprisal level, only scaled)
+stage 3: full amplitude-latency-scale -> beta_j independent per basis,modulation (positive control)    reshapes the TRF, not just scales
+stage 4: multi-patient/electrode -> stage 3 + random intercepts/ hierarchical recovery            slopes per patient & electrode
 """
 
 from __future__ import annotations

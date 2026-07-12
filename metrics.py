@@ -61,7 +61,7 @@ def tf_parameter_recovery_error(
 def _self_test() -> None:
     rng = np.random.default_rng(3)
 
-    # pearson_r: perfect correlation, zero correlation, anti-correlation.
+    # pearson_r: perfect correlation, 0 correlation, anti-correlation.
     x = rng.normal(0, 1, 500)
     assert abs(pearson_r(x, x) - 1.0) < 1e-10
     assert abs(pearson_r(x, -x) - (-1.0)) < 1e-10

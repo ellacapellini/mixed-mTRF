@@ -13,14 +13,11 @@ class GPmTRF:
         self.cov_  = None   # post covariance, shape (n_weights, n_weights)
         self.std_  = None   # Marginal std x weight (sqrt of cov diagonal)
 
-
-
     def _build_prior_K(self, n_features):
         """block-diagonal prior covariance over all TRF weights"""
         K_single = self.kernel(self.lags, self.lags)  # (n_lags, n_lags)
         K = np.kron(np.eye(n_features), K_single)
         return K + 1e-6 * np.eye(K.shape[0])
-
 
     def fit(self, X, y):
         """compute exact GP posterior (weight-space formulation)"""
@@ -33,8 +30,8 @@ class GPmTRF:
         self.cov_  = np.linalg.inv(precision)
         #post mean
         self.mean_ = (self.cov_ @ X.T @ y) / self.noise_var
-        # Marginal std: sqrt of diagonal of Σ
-        # clip ensures no negative values from floating-point noise
+        #marginal std: sqrt of diagonal of Σ
+        # clip ensures no - values from floating-point noise
         self.std_  = np.sqrt(np.clip(np.diag(self.cov_), 0, None))
         return self
 
@@ -46,7 +43,6 @@ class GPmTRF:
         """Pearson r between predicted and actual EEG"""
         return np.corrcoef(y, self.predict(X))[0, 1]
 
- 
     def get_trf(self, feature_name, feature_slices):
         """Extract post mean and uncertainty for one feature"""
         sl = feature_slices[feature_name]

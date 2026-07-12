@@ -15,7 +15,7 @@ def trf_at_surprisal(
 ) -> np.ndarray:
     """
     Evaluate h(tau | surp) = sum_j [mu_j + beta_j * surp] * phi_j(tau)
-    at a given surprisal level, over a grid of lags.
+    at given surp level, over grid of lags.
     """
     Phi = basis.eval(tau)  # (n_lags, n_basis)
     w = mu + beta * surp   # (n_basis,)
@@ -64,27 +64,6 @@ def surprisal_sweep(
     plotting against Lalor's Figure 3-style summary and for the
     stage-2-vs-stage-3 diagnostic: does amplitude alone change (gain
     control) or do latency/scale change too (predictive coding)?
-
-    Guard against a real numerical failure mode: if w(surp) = mu +
-    beta*surp is a scalar multiple of a single fixed shape (as in
-    stage 2's amplitude-only ground truth), that scalar can cross
-    zero at some surprisal level. The TRUE scale metric is scale-
-    invariant so it stays well-defined right through the crossing --
-    but any FITTED/recovered TRF has residual estimation error of
-    roughly constant absolute size, so right at the crossing (where
-    true amplitude -> 0) the recovered "shape" is dominated by that
-    residual error rather than signal, and scale (and to a lesser
-    extent latency) can blow up to something that looks like a real
-    effect but is actually just estimation noise inflated by a near-
-    zero denominator. This bit us in practice: a plain surprisal
-    sweep on a ridge-recovered stage-2 fit showed a spurious spike in
-    scale right at the amplitude zero-crossing.
-
-    Fix: flag latency/scale as unreliable (NaN) at any surprisal level
-    where amplitude falls below `min_relative_amplitude` times the
-    peak amplitude across the sweep. NaNs break the plotted line
-    rather than silently drawing a spike that looks like a real
-    latency/scale effect.
     """
     A_vals, lat_vals, scale_vals = [], [], []
     for s in surp_levels:
@@ -141,14 +120,7 @@ def _self_test() -> None:
     # DENSE grid across the region where the stage-2 gain factor
     # (1 + gain*surp) crosses zero (gain=-0.3 -> crossing at surp=1/0.3),
     # using slightly-perturbed (not exact) weights to simulate the kind
-    # of residual estimation error a real fit has. Confirm the masking
-    # guard actually suppresses the spike rather than letting it through.
-    # Regression test for the zero-crossing numerical artifact, using a
-    # REAL ridge-recovered fit (not hand-added noise) -- this is the
-    # actual scenario that broke: a plain surprisal sweep on a ridge fit
-    # of stage-2 synthetic data showed a spurious spike in scale right
-    # at the amplitude zero-crossing (gain=-0.3 -> crossing at surp=1/0.3
-    # = 3.33 bits). Confirm the masking guard suppresses it.
+    # of residual estimation error a real fit has. 
     from data.simulate import simulate_recording
     from utils.design_matrix import DesignMatrix
     from models.mixed_trf import fit_ridge_mixed_trf
