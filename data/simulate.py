@@ -70,7 +70,7 @@ def simulate_recording(
     """
     Simulate 1 recording for a given patient/electrode.
     """
-    stimulus = rng.normal(0, 1, size=n_times)  # e.g. speech envelope proxy
+    stimulus = rng.normal(0, 1, size=n_times)  #e.g. speech envelope proxy
     word_onsets, word_surp = make_word_stream(n_times, dt, words_per_second, rng)
     surp_at_t = expand_word_level_to_samples(n_times, dt, word_onsets, word_surp)
 
@@ -157,8 +157,7 @@ def _self_test() -> None:
     achieved_snr_pink = signal_pink.std() / rec_pink.sigma_noise
     assert 3.0 < achieved_snr_pink < 7.0, f"pink-noise SNR {achieved_snr_pink} far from target"
 
-    # Reconstruct raw noise (r - signal) and check its power spectrum
-    # falls off with frequency (1/f-like), unlike white noise which is flat.
+    # Reconstruct raw noise (r - signal) and check its power spectrum falls off with frequency (1/f-like), unlike white noise which is flat
     # <f vs >f power: pink noise should have substantially > power at < f.
     noise_realisation = rec_pink.r - signal_pink
     fft_power = np.abs(np.fft.rfft(noise_realisation)) ** 2
