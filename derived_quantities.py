@@ -1,7 +1,7 @@
 """
 Post-hoc amplitude / latency / temporal-scale decomposition from
 Section 6, computed from an already-fitted basis-weight TRF
-h(tau | surp). 
+h(tau | surp)
 """
 
 from __future__ import annotations

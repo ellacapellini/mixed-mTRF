@@ -10,9 +10,8 @@ same reasoning for why the stages matter (equations doc Section 1's
 validation plan) -- just h(tau|surp) = h0(tau) + h1(tau)*surp is now built
 from GP draws (equations doc Section 7.3) instead of a basis-weight sum.
 
-A REAL CONCEPTUAL DIFFERENCE FROM ground_truth.py, worth being explicit
-about rather than letting it be a silent surprise later: in Model A,
-patient/electrode differences are a deterministic offset on top of a
+A REAL CONCEPTUAL ≠ FROM ground_truth.py, in Model A,
+patient/electrode ≠ are a deterministic offset on top of a
 shared basis-weight vector (mu + u_p), so two patients with u_p=0 get
 IDENTICAL ground truth. In Model B, h0/h1 are draws from a distribution
 over functions -- so even two patients with IDENTICAL kernel
@@ -24,9 +23,9 @@ DISTRIBUTION governing each unit's own independent draw." I think this
 is the honest behaviour to have, not a bug: it's exactly what a GP
 prior over the TRF *means*.
 
-WHAT'S DELIBERATELY NOT HERE YET: B2 ground truth (kernel hyperparameters
+WHAT'S DELIBERATELY NOT HERE YET: B2 ground truth (kernel hyperparam
 genuinely varying with surprisal, equations doc Section 7.4, Eq 17-18).
-The equations doc gives the hyperparameter equations for B2 but doesn't
+The equations doc gives the hyperparam equations for B2 but doesn't
 yet fully re-derive how that feeds back into the h0 + h1*surp generative
 form Eq 15 relies on -- multiplying a FIXED h1 draw by surp doesn't
 obviously square with h1's own kernel changing at every surp value. I

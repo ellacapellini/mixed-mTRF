@@ -2,7 +2,7 @@
 compare.py
 ==========
 
-THE presentation deliverable: fits all seven models on one shared,
+THE presentation deliverable: fits all 7 models on one shared,
 white-noise synthetic dataset, computes held-out predictive accuracy
 for each, and produces a comparison figure.
 
