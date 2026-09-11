@@ -1,0 +1,26 @@
+{
+  "B-SE-B1 -> B-SE-B1": {
+    "generator": "B-SE-B1",
+    "fitter": "B-SE-B1",
+    "r": 0.9812647060411724,
+    "diagnostics": {
+      "max_rhat": 1.3081210066261415,
+      "min_ess_bulk": 10.390992038173064,
+      "n_divergences": 11
+    },
+    "elapsed_s": 1941.2650890350342,
+    "is_diagonal": true
+  },
+  "B-SE-B2 -> B-SE-B2": {
+    "generator": "B-SE-B2",
+    "fitter": "B-SE-B2",
+    "r": 0.9617761804929608,
+    "diagnostics": {
+      "max_rhat": 1.0358818939648362,
+      "min_ess_bulk": 119.117227461994,
+      "n_divergences": 0
+    },
+    "elapsed_s": 700.1367008686066,
+    "is_diagonal": true
+  }
+}

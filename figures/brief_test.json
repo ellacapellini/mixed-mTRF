@@ -1,0 +1,20 @@
+{
+  "B-Matern-B1 -> B-Matern-B1": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-Matern-B1",
+    "r": 0.9819431426678793,
+    "diagnostics": {
+      "max_rhat": 1.1971529836342214,
+      "min_ess_bulk": 9.185025407489544,
+      "n_divergences": 0,
+      "elpd_loo": -2344.554719993874,
+      "elpd_loo_se": 275.16676191181125,
+      "max_pareto_k": 4.010915284524262,
+      "n_bad_pareto_k": 4,
+      "n_units_loo": 4,
+      "elpd_waic": -2479.1673376576646
+    },
+    "elapsed_s": 51.946754932403564,
+    "is_diagonal": true
+  }
+}

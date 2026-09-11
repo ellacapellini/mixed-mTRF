@@ -92,6 +92,70 @@ def build_design_matrix(
     return DesignMatrix(S0=S0, S1=S1, X=X)
 
 
+def build_raw_lag_design_matrix(
+    stimulus: np.ndarray,
+    surprisal_at_t: np.ndarray,
+    taus: np.ndarray,
+    dt: float,
+) -> DesignMatrix:
+    """
+    Model B's version of build_design_matrix -- same lag-shifted
+    surprisal-indexing fix (Section 5 of the equations doc), but
+    WITHOUT projecting through basis functions, since Model B's
+    h0(tau)/h1(tau) (equations doc Section 7.3) live directly on the
+    raw lag grid, not on basis coefficients.
+
+    WHY THIS FUNCTION EXISTS, and why it's not just build_design_matrix
+    with a different basis passed in: I originally wrote in the
+    equations doc (Section 7.3) that "design_matrix.py does not need
+    to change between Model A and Model B." That's not quite right,
+    and I only caught it while actually implementing this. The
+    CONVOLUTION LOGIC -- indexing surprisal at t-tau, not t -- is
+    genuinely identical and reusable between the two models. But
+    build_design_matrix's output is basis-PROJECTED: S0[t,j] sums each
+    lag's contribution weighted by phi_j(tau), collapsing n_lags
+    columns down to n_basis columns. Model B has no basis to project
+    through -- h0/h1 are direct functions of tau, so the regressor
+    Model B actually needs is the RAW lagged (and surprisal-weighted)
+    stimulus, one column per lag, not per basis function.
+
+    S0[t, k] = s(t - tau_k)                              (raw, no projection)
+    S1[t, k] = surp[i(t - tau_k)] * s(t - tau_k)
+
+    The self-test below cross-checks this against build_design_matrix
+    directly: projecting this raw output through a basis's Phi matrix
+    (S0_raw @ Phi) should exactly equal build_design_matrix's own S0 --
+    which is the code-level version of "Model A is a restricted case
+    of Model B" (equations doc Section 6), not just a claim about the
+    math on paper.
+    """
+    stimulus = np.asarray(stimulus, dtype=float)
+    surprisal_at_t = np.asarray(surprisal_at_t, dtype=float)
+    taus = np.asarray(taus, dtype=float)
+    n_times = stimulus.shape[0]
+    if surprisal_at_t.shape[0] != n_times:
+        raise ValueError("stimulus and surprisal_at_t must have the same length")
+
+    n_lags = len(taus)
+    S0 = np.zeros((n_times, n_lags))
+    S1 = np.zeros((n_times, n_lags))
+
+    for k, tau_k in enumerate(taus):
+        shift = int(round(tau_k / dt))
+        if shift == 0:
+            s_shifted = stimulus
+            surp_shifted = surprisal_at_t
+        else:
+            s_shifted = np.concatenate([np.zeros(shift), stimulus[:-shift]])
+            surp_shifted = np.concatenate([np.zeros(shift), surprisal_at_t[:-shift]])
+
+        S0[:, k] = s_shifted
+        S1[:, k] = s_shifted * surp_shifted
+
+    X = np.concatenate([S0, S1], axis=1)
+    return DesignMatrix(S0=S0, S1=S1, X=X)
+
+
 def expand_word_level_to_samples(
     n_times: int,
     dt: float,
@@ -188,6 +252,34 @@ def _self_test() -> None:
     assert dm2.X.shape == (n_times, 2 * basis.n_basis)
     np.testing.assert_allclose(dm2.X[:, : basis.n_basis], dm2.S0)
     np.testing.assert_allclose(dm2.X[:, basis.n_basis :], dm2.S1)
+    print("design_matrix.py: all self-tests passed.")
+
+    # --- test 6: build_raw_lag_design_matrix, Model B's version -------------
+    taus_fine = np.arange(n_lags) * dt  # same grid build_design_matrix used internally
+    dm_raw = build_raw_lag_design_matrix(stimulus2, surp_t2, taus_fine, dt)
+    assert dm_raw.S0.shape == (n_times, n_lags), f"raw S0 wrong shape: {dm_raw.S0.shape}"
+    assert dm_raw.S1.shape == (n_times, n_lags), f"raw S1 wrong shape: {dm_raw.S1.shape}"
+    print("design_matrix.py: build_raw_lag_design_matrix shape sanity test passed.")
+
+    # --- test 7: THE cross-check -- projecting the raw output through a ----
+    # basis's Phi matrix should exactly reproduce build_design_matrix's own
+    # output. This is the code-level version of "Model A is a restricted
+    # case of Model B" (equations doc Section 6) -- not just a claim about
+    # the math on paper, an actual numerical identity between the two
+    # functions' outputs.
+    Phi_check = basis.eval(taus_fine)  # (n_lags, n_basis)
+    S0_reprojected = dm_raw.S0 @ Phi_check
+    S1_reprojected = dm_raw.S1 @ Phi_check
+    np.testing.assert_allclose(S0_reprojected, dm2.S0, atol=1e-8), (
+        "projecting the raw-lag design matrix through the basis should exactly "
+        "reproduce build_design_matrix's own S0 -- if this fails, the two "
+        "functions have silently diverged in what they compute"
+    )
+    np.testing.assert_allclose(S1_reprojected, dm2.S1, atol=1e-8)
+    print("design_matrix.py: raw-lag output, reprojected through the basis, exactly "
+          "reproduces build_design_matrix's own output (Model A as a restricted "
+          "Model B, confirmed numerically at the code level, not just on paper).")
+
     print("design_matrix.py: all self-tests passed.")
 
 

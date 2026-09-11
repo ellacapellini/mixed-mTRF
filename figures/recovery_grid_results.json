@@ -1,0 +1,482 @@
+{
+  "A-B1 -> Standard": {
+    "generator": "A-B1",
+    "fitter": "Standard",
+    "r": 0.25358363870087786,
+    "diagnostics": null,
+    "elapsed_s": 0.0002639293670654297,
+    "is_diagonal": false
+  },
+  "A-B1 -> A-B1": {
+    "generator": "A-B1",
+    "fitter": "A-B1",
+    "r": 0.9692775728491708,
+    "diagnostics": {
+      "max_rhat": 1.0299223102180404,
+      "min_ess_bulk": 94.62950862246988,
+      "n_divergences": 5
+    },
+    "elapsed_s": 175.12374305725098,
+    "is_diagonal": true
+  },
+  "A-B1 -> A-B2": {
+    "generator": "A-B1",
+    "fitter": "A-B2",
+    "r": 0.9511801424910508,
+    "diagnostics": {
+      "max_rhat": 1.0655331366961829,
+      "min_ess_bulk": 27.57980808665922,
+      "n_divergences": 4
+    },
+    "elapsed_s": 254.26431512832642,
+    "is_diagonal": false
+  },
+  "A-B1 -> B-Matern-B1": {
+    "generator": "A-B1",
+    "fitter": "B-Matern-B1",
+    "r": 0.9765695329740994,
+    "diagnostics": {
+      "max_rhat": 1.062813902245502,
+      "min_ess_bulk": 44.81641897326748,
+      "n_divergences": 40
+    },
+    "elapsed_s": 162.42485809326172,
+    "is_diagonal": false
+  },
+  "A-B1 -> B-Matern-B2": {
+    "generator": "A-B1",
+    "fitter": "B-Matern-B2",
+    "r": 0.9766417998210536,
+    "diagnostics": {
+      "max_rhat": 1.0919641470368122,
+      "min_ess_bulk": 21.298962277453633,
+      "n_divergences": 52
+    },
+    "elapsed_s": 180.54127383232117,
+    "is_diagonal": false
+  },
+  "A-B1 -> B-SE-B1": {
+    "generator": "A-B1",
+    "fitter": "B-SE-B1",
+    "r": 0.9766298483810117,
+    "diagnostics": {
+      "max_rhat": 1.2041438921305088,
+      "min_ess_bulk": 8.926793650596236,
+      "n_divergences": 74
+    },
+    "elapsed_s": 138.26133370399475,
+    "is_diagonal": false
+  },
+  "A-B1 -> B-SE-B2": {
+    "generator": "A-B1",
+    "fitter": "B-SE-B2",
+    "r": 0.976589993992211,
+    "diagnostics": {
+      "max_rhat": 1.0568234817077258,
+      "min_ess_bulk": 38.58009321173431,
+      "n_divergences": 93
+    },
+    "elapsed_s": 157.28785300254822,
+    "is_diagonal": false
+  },
+  "A-B2 -> Standard": {
+    "generator": "A-B2",
+    "fitter": "Standard",
+    "r": 0.6891600828623297,
+    "diagnostics": null,
+    "elapsed_s": 0.007119894027709961,
+    "is_diagonal": false
+  },
+  "A-B2 -> A-B1": {
+    "generator": "A-B2",
+    "fitter": "A-B1",
+    "r": 0.9896708598070094,
+    "diagnostics": {
+      "max_rhat": 1.036734473441855,
+      "min_ess_bulk": 59.117101994827294,
+      "n_divergences": 1
+    },
+    "elapsed_s": 70.64786314964294,
+    "is_diagonal": false
+  },
+  "A-B2 -> A-B2": {
+    "generator": "A-B2",
+    "fitter": "A-B2",
+    "r": 0.9850049475172602,
+    "diagnostics": {
+      "max_rhat": 1.0497069762877889,
+      "min_ess_bulk": 54.089184348008956,
+      "n_divergences": 1
+    },
+    "elapsed_s": 58.11461114883423,
+    "is_diagonal": true
+  },
+  "A-B2 -> B-Matern-B1": {
+    "generator": "A-B2",
+    "fitter": "B-Matern-B1",
+    "r": 0.9873316761576794,
+    "diagnostics": {
+      "max_rhat": 1.0539812160208228,
+      "min_ess_bulk": 86.22819250742822,
+      "n_divergences": 24
+    },
+    "elapsed_s": 117.75757884979248,
+    "is_diagonal": false
+  },
+  "A-B2 -> B-Matern-B2": {
+    "generator": "A-B2",
+    "fitter": "B-Matern-B2",
+    "r": 0.9872272763710389,
+    "diagnostics": {
+      "max_rhat": 1.0728791431632347,
+      "min_ess_bulk": 28.93649237662537,
+      "n_divergences": 18
+    },
+    "elapsed_s": 141.39942073822021,
+    "is_diagonal": false
+  },
+  "A-B2 -> B-SE-B1": {
+    "generator": "A-B2",
+    "fitter": "B-SE-B1",
+    "r": 0.9870696743262978,
+    "diagnostics": {
+      "max_rhat": 1.1565620085961055,
+      "min_ess_bulk": 10.1363239215326,
+      "n_divergences": 36
+    },
+    "elapsed_s": 137.91352605819702,
+    "is_diagonal": false
+  },
+  "A-B2 -> B-SE-B2": {
+    "generator": "A-B2",
+    "fitter": "B-SE-B2",
+    "r": 0.9871223593594508,
+    "diagnostics": {
+      "max_rhat": 1.0348221700795492,
+      "min_ess_bulk": 52.81491713890676,
+      "n_divergences": 31
+    },
+    "elapsed_s": 245.44791293144226,
+    "is_diagonal": false
+  },
+  "B-Matern-B1 -> Standard": {
+    "generator": "B-Matern-B1",
+    "fitter": "Standard",
+    "r": 0.24453272157933084,
+    "diagnostics": null,
+    "elapsed_s": 0.0031621456146240234,
+    "is_diagonal": false
+  },
+  "B-Matern-B1 -> A-B1": {
+    "generator": "B-Matern-B1",
+    "fitter": "A-B1",
+    "r": 0.9019204257834791,
+    "diagnostics": {
+      "max_rhat": 1.0447824614329,
+      "min_ess_bulk": 40.79361498224461,
+      "n_divergences": 0
+    },
+    "elapsed_s": 67.32082724571228,
+    "is_diagonal": false
+  },
+  "B-Matern-B1 -> A-B2": {
+    "generator": "B-Matern-B1",
+    "fitter": "A-B2",
+    "r": 0.9056787245507049,
+    "diagnostics": {
+      "max_rhat": 1.0441403228280328,
+      "min_ess_bulk": 87.11057512220972,
+      "n_divergences": 1
+    },
+    "elapsed_s": 58.702616930007935,
+    "is_diagonal": false
+  },
+  "B-Matern-B1 -> B-Matern-B1": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-Matern-B1",
+    "r": 0.9898095587992017,
+    "diagnostics": {
+      "max_rhat": 1.0365982345700353,
+      "min_ess_bulk": 69.87028433701173,
+      "n_divergences": 3
+    },
+    "elapsed_s": 146.15878129005432,
+    "is_diagonal": true
+  },
+  "B-Matern-B1 -> B-Matern-B2": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-Matern-B2",
+    "r": 0.9897573145592939,
+    "diagnostics": {
+      "max_rhat": 1.066071760955841,
+      "min_ess_bulk": 58.66327432068277,
+      "n_divergences": 0
+    },
+    "elapsed_s": 260.98026990890503,
+    "is_diagonal": false
+  },
+  "B-Matern-B1 -> B-SE-B1": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-SE-B1",
+    "r": 0.9898695616717714,
+    "diagnostics": {
+      "max_rhat": 1.051720518695298,
+      "min_ess_bulk": 32.929867015536864,
+      "n_divergences": 1
+    },
+    "elapsed_s": 374.9241192340851,
+    "is_diagonal": false
+  },
+  "B-Matern-B1 -> B-SE-B2": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-SE-B2",
+    "r": 0.9897547639255364,
+    "diagnostics": {
+      "max_rhat": 1.0417248165175763,
+      "min_ess_bulk": 73.17217636778473,
+      "n_divergences": 14
+    },
+    "elapsed_s": 684.8275799751282,
+    "is_diagonal": false
+  },
+  "B-Matern-B2 -> Standard": {
+    "generator": "B-Matern-B2",
+    "fitter": "Standard",
+    "r": 0.2272177579379392,
+    "diagnostics": null,
+    "elapsed_s": 0.0019481182098388672,
+    "is_diagonal": false
+  },
+  "B-Matern-B2 -> A-B1": {
+    "generator": "B-Matern-B2",
+    "fitter": "A-B1",
+    "r": 0.8368560593876274,
+    "diagnostics": {
+      "max_rhat": 1.0406831104330576,
+      "min_ess_bulk": 100.9349370176586,
+      "n_divergences": 2
+    },
+    "elapsed_s": 57.08433508872986,
+    "is_diagonal": false
+  },
+  "B-Matern-B2 -> A-B2": {
+    "generator": "B-Matern-B2",
+    "fitter": "A-B2",
+    "r": 0.8393501190204234,
+    "diagnostics": {
+      "max_rhat": 1.0393330552585458,
+      "min_ess_bulk": 123.33182737274007,
+      "n_divergences": 0
+    },
+    "elapsed_s": 55.59067225456238,
+    "is_diagonal": false
+  },
+  "B-Matern-B2 -> B-Matern-B1": {
+    "generator": "B-Matern-B2",
+    "fitter": "B-Matern-B1",
+    "r": 0.9585684925233667,
+    "diagnostics": {
+      "max_rhat": 1.1371941397264131,
+      "min_ess_bulk": 10.55818528874443,
+      "n_divergences": 0
+    },
+    "elapsed_s": 98.188157081604,
+    "is_diagonal": false
+  },
+  "B-Matern-B2 -> B-Matern-B2": {
+    "generator": "B-Matern-B2",
+    "fitter": "B-Matern-B2",
+    "r": 0.9582754380700248,
+    "diagnostics": {
+      "max_rhat": 1.0541358355087653,
+      "min_ess_bulk": 39.40672432996408,
+      "n_divergences": 0
+    },
+    "elapsed_s": 308.78673577308655,
+    "is_diagonal": true
+  },
+  "B-Matern-B2 -> B-SE-B1": {
+    "generator": "B-Matern-B2",
+    "fitter": "B-SE-B1",
+    "r": 0.9583789935409334,
+    "diagnostics": {
+      "max_rhat": 1.1376924324183213,
+      "min_ess_bulk": 10.308312237211872,
+      "n_divergences": 10
+    },
+    "elapsed_s": 177.96899604797363,
+    "is_diagonal": false
+  },
+  "B-Matern-B2 -> B-SE-B2": {
+    "generator": "B-Matern-B2",
+    "fitter": "B-SE-B2",
+    "r": 0.9582609683901443,
+    "diagnostics": {
+      "max_rhat": 1.1485733135138767,
+      "min_ess_bulk": 11.724600985604875,
+      "n_divergences": 0
+    },
+    "elapsed_s": 563.3814299106598,
+    "is_diagonal": false
+  },
+  "B-SE-B1 -> Standard": {
+    "generator": "B-SE-B1",
+    "fitter": "Standard",
+    "r": 0.1505262262578135,
+    "diagnostics": null,
+    "elapsed_s": 0.002315998077392578,
+    "is_diagonal": false
+  },
+  "B-SE-B1 -> A-B1": {
+    "generator": "B-SE-B1",
+    "fitter": "A-B1",
+    "r": 0.9766691554697351,
+    "diagnostics": {
+      "max_rhat": 1.046508070373262,
+      "min_ess_bulk": 47.275915653760485,
+      "n_divergences": 4
+    },
+    "elapsed_s": 75.37819480895996,
+    "is_diagonal": false
+  },
+  "B-SE-B1 -> A-B2": {
+    "generator": "B-SE-B1",
+    "fitter": "A-B2",
+    "r": 0.979024918026818,
+    "diagnostics": {
+      "max_rhat": 1.0323721975778766,
+      "min_ess_bulk": 106.7218468476551,
+      "n_divergences": 3
+    },
+    "elapsed_s": 68.96208715438843,
+    "is_diagonal": false
+  },
+  "B-SE-B1 -> B-Matern-B1": {
+    "generator": "B-SE-B1",
+    "fitter": "B-Matern-B1",
+    "r": 0.9809690090289731,
+    "diagnostics": {
+      "max_rhat": 1.1270536513452858,
+      "min_ess_bulk": 10.963999775985126,
+      "n_divergences": 3
+    },
+    "elapsed_s": 186.93292498588562,
+    "is_diagonal": false
+  },
+  "B-SE-B1 -> B-Matern-B2": {
+    "generator": "B-SE-B1",
+    "fitter": "B-Matern-B2",
+    "r": 0.9810118451465238,
+    "diagnostics": {
+      "max_rhat": 1.2012168690746685,
+      "min_ess_bulk": 7.516869532340561,
+      "n_divergences": 0
+    },
+    "elapsed_s": 439.6856188774109,
+    "is_diagonal": false
+  },
+  "B-SE-B1 -> B-SE-B1": {
+    "generator": "B-SE-B1",
+    "fitter": "B-SE-B1",
+    "r": 0.981167670903508,
+    "diagnostics": {
+      "max_rhat": 1.3740519729319565,
+      "min_ess_bulk": 4.889404208691432,
+      "n_divergences": 6
+    },
+    "elapsed_s": 620.0923490524292,
+    "is_diagonal": true
+  },
+  "B-SE-B1 -> B-SE-B2": {
+    "generator": "B-SE-B1",
+    "fitter": "B-SE-B2",
+    "r": 0.9809008399796751,
+    "diagnostics": {
+      "max_rhat": 1.2691165248143392,
+      "min_ess_bulk": 5.831779954748598,
+      "n_divergences": 6
+    },
+    "elapsed_s": 752.5408968925476,
+    "is_diagonal": false
+  },
+  "B-SE-B2 -> Standard": {
+    "generator": "B-SE-B2",
+    "fitter": "Standard",
+    "r": 0.04400728090083166,
+    "diagnostics": null,
+    "elapsed_s": 0.0022242069244384766,
+    "is_diagonal": false
+  },
+  "B-SE-B2 -> A-B1": {
+    "generator": "B-SE-B2",
+    "fitter": "A-B1",
+    "r": 0.7620447755599493,
+    "diagnostics": {
+      "max_rhat": 1.0440976125291084,
+      "min_ess_bulk": 105.4245508868375,
+      "n_divergences": 1
+    },
+    "elapsed_s": 41.47509813308716,
+    "is_diagonal": false
+  },
+  "B-SE-B2 -> A-B2": {
+    "generator": "B-SE-B2",
+    "fitter": "A-B2",
+    "r": 0.7712564906151091,
+    "diagnostics": {
+      "max_rhat": 1.0576287075421846,
+      "min_ess_bulk": 95.45317651026087,
+      "n_divergences": 0
+    },
+    "elapsed_s": 43.634318113327026,
+    "is_diagonal": false
+  },
+  "B-SE-B2 -> B-Matern-B1": {
+    "generator": "B-SE-B2",
+    "fitter": "B-Matern-B1",
+    "r": 0.961852131996355,
+    "diagnostics": {
+      "max_rhat": 1.0645487770067148,
+      "min_ess_bulk": 35.86599470712458,
+      "n_divergences": 1
+    },
+    "elapsed_s": 111.47888112068176,
+    "is_diagonal": false
+  },
+  "B-SE-B2 -> B-Matern-B2": {
+    "generator": "B-SE-B2",
+    "fitter": "B-Matern-B2",
+    "r": 0.9617999560663681,
+    "diagnostics": {
+      "max_rhat": 1.0654736886353362,
+      "min_ess_bulk": 27.48947575551713,
+      "n_divergences": 0
+    },
+    "elapsed_s": 133.24121594429016,
+    "is_diagonal": false
+  },
+  "B-SE-B2 -> B-SE-B1": {
+    "generator": "B-SE-B2",
+    "fitter": "B-SE-B1",
+    "r": 0.961756380716014,
+    "diagnostics": {
+      "max_rhat": 1.0564297832602885,
+      "min_ess_bulk": 81.65098874031784,
+      "n_divergences": 0
+    },
+    "elapsed_s": 380.73931789398193,
+    "is_diagonal": false
+  },
+  "B-SE-B2 -> B-SE-B2": {
+    "generator": "B-SE-B2",
+    "fitter": "B-SE-B2",
+    "r": 0.9617852518036998,
+    "diagnostics": {
+      "max_rhat": 1.061926697960954,
+      "min_ess_bulk": 33.75213053925123,
+      "n_divergences": 0
+    },
+    "elapsed_s": 402.175724029541,
+    "is_diagonal": true
+  }
+}

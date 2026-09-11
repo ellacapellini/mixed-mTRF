@@ -1,0 +1,82 @@
+{
+  "Standard -> Standard": {
+    "generator": "Standard",
+    "fitter": "Standard",
+    "r": 0.9805083950902195,
+    "diagnostics": null,
+    "elapsed_s": 0.00025916099548339844,
+    "is_diagonal": true
+  },
+  "A-B1 -> A-B1": {
+    "generator": "A-B1",
+    "fitter": "A-B1",
+    "r": 0.9866474012152073,
+    "diagnostics": {
+      "max_rhat": 1.0261350524511392,
+      "min_ess_bulk": 221.33266814117385,
+      "n_divergences": 8
+    },
+    "elapsed_s": 155.43777894973755,
+    "is_diagonal": true
+  },
+  "A-B2 -> A-B2": {
+    "generator": "A-B2",
+    "fitter": "A-B2",
+    "r": 0.9790051747468488,
+    "diagnostics": {
+      "max_rhat": 1.0305245961524123,
+      "min_ess_bulk": 199.63050324134463,
+      "n_divergences": 3
+    },
+    "elapsed_s": 121.09607791900635,
+    "is_diagonal": true
+  },
+  "B-Matern-B1 -> B-Matern-B1": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-Matern-B1",
+    "r": 0.9536013981246451,
+    "diagnostics": {
+      "max_rhat": 1.0672664547477444,
+      "min_ess_bulk": 63.90660007557562,
+      "n_divergences": 0
+    },
+    "elapsed_s": 142.12265491485596,
+    "is_diagonal": true
+  },
+  "B-Matern-B2 -> B-Matern-B2": {
+    "generator": "B-Matern-B2",
+    "fitter": "B-Matern-B2",
+    "r": 0.9801415107681204,
+    "diagnostics": {
+      "max_rhat": 1.0603467316157678,
+      "min_ess_bulk": 70.46855985158727,
+      "n_divergences": 0
+    },
+    "elapsed_s": 3062.087430000305,
+    "is_diagonal": true
+  },
+  "B-SE-B1 -> B-SE-B1": {
+    "generator": "B-SE-B1",
+    "fitter": "B-SE-B1",
+    "r": 0.9747117188601002,
+    "diagnostics": {
+      "max_rhat": 1.0327396756762248,
+      "min_ess_bulk": 127.50292095732411,
+      "n_divergences": 0
+    },
+    "elapsed_s": 1654.7403540611267,
+    "is_diagonal": true
+  },
+  "B-SE-B2 -> B-SE-B2": {
+    "generator": "B-SE-B2",
+    "fitter": "B-SE-B2",
+    "r": 0.9412461957969219,
+    "diagnostics": {
+      "max_rhat": 1.1604087955020252,
+      "min_ess_bulk": 18.914807493444954,
+      "n_divergences": 22
+    },
+    "elapsed_s": 1152.1442527770996,
+    "is_diagonal": true
+  }
+}
