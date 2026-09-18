@@ -23,17 +23,6 @@ DISTRIBUTION governing each unit's own independent draw." I think this
 is the honest behaviour to have, not a bug: it's exactly what a GP
 prior over the TRF *means*.
 
-WHAT'S DELIBERATELY NOT HERE YET: B2 ground truth (kernel hyperparam
-genuinely varying with surprisal, equations doc Section 7.4, Eq 17-18).
-The equations doc gives the hyperparam equations for B2 but doesn't
-yet fully re-derive how that feeds back into the h0 + h1*surp generative
-form Eq 15 relies on -- multiplying a FIXED h1 draw by surp doesn't
-obviously square with h1's own kernel changing at every surp value. I
-don't want to guess at a generative structure the doc itself hasn't
-pinned down, so this file only implements B1-style ground truth (kernel
-hyperparameters fixed w.r.t. surp) for now. Building B2 ground truth
-properly is follow-up work once that generative question is actually
-resolved, not something to paper over here.
 
 Depends on: utils/kernels.py, utils/hierarchical_kernel.py
 """
