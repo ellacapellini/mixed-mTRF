@@ -144,6 +144,7 @@ def build_dataset_from_generator(
     dt: float,
     snr_target: float,
     seed: int,
+    return_ground_truth: bool = False,
 ):
     """
     Builds ONE synthetic dataset from the named generator's own
@@ -152,6 +153,21 @@ def build_dataset_from_generator(
     generated the response -- every fitter needs its native matrix
     type no matter which generator produced the underlying data, which
     is the mechanism that makes cross-fitting possible at all.
+
+    return_ground_truth : if True, also includes the internal `gt`
+        object (GroundTruthEffects for Model A, GroundTruthGP for
+        Model B) in the returned dict under "ground_truth". Needed by
+        anything that wants the TRUE per-unit shape after the fact
+        (e.g. plot_diagonal_shapes.py) -- get it from HERE, not by
+        reconstructing a separately-seeded copy: ground_truth_gp.py's
+        shape_for() is a lazy, RNG-state-dependent draw (only consumes
+        RNG the first time a given unit is requested), and this
+        function's own per-unit loop below already advances the RNG
+        (stimulus, word stream) before first calling shape_for for
+        each unit -- a fresh reconstruction elsewhere that calls
+        shape_for without first replaying those exact draws will
+        silently draw a DIFFERENT, unrelated h0/h1 and call it "true".
+        Default False keeps this a no-op for every existing caller.
     """
     rng = np.random.default_rng(seed)
     family = _family_of(generator_name)
@@ -211,7 +227,7 @@ def build_dataset_from_generator(
             patient_idx.append(p)
             unit_mean_surp.append(unit_surp_mean)
 
-    return {
+    result = {
         "S0_basis": np.array(S0_basis_all), "S1_basis": np.array(S1_basis_all),
         "S0_raw": np.array(S0_raw_all), "S1_raw": np.array(S1_raw_all),
         "r": np.array(r_all),
@@ -220,6 +236,9 @@ def build_dataset_from_generator(
         "n_units": n_patients * n_electrodes,
         "n_times": n_times,
     }
+    if return_ground_truth:
+        result["ground_truth"] = gt
+    return result
 
 
 def split_train_test(data: dict, test_fraction: float = 0.2):
