@@ -1,0 +1,153 @@
+{
+  "Standard -> Standard": {
+    "generator": "Standard",
+    "fitter": "Standard",
+    "r": 0.9776275011226311,
+    "diagnostics": null,
+    "shape_recovery": {
+      "rmse": 0.009106526109300832,
+      "normalised_rmse": 0.01246796158944419,
+      "correlation": 0.9999281059966956
+    },
+    "elapsed_s": 0.0010519027709960938,
+    "is_diagonal": true
+  },
+  "A-B1 -> A-B1": {
+    "generator": "A-B1",
+    "fitter": "A-B1",
+    "r": 0.9589182363771784,
+    "diagnostics": {
+      "max_rhat": 1.0955143527148659,
+      "min_ess_bulk": 38.601472610784356,
+      "n_divergences": 0,
+      "elpd_loo": -471.9827616795223,
+      "elpd_loo_se": 85.05576485493592,
+      "max_pareto_k": 1.7748503683056902,
+      "n_bad_pareto_k": 4,
+      "n_units_loo": 4,
+      "elpd_waic": -477.7804987437549
+    },
+    "shape_recovery": {
+      "rmse": 0.0948848897763057,
+      "normalised_rmse": 0.10320330612884913,
+      "correlation": 0.9982426826230569
+    },
+    "elapsed_s": 20.07666301727295,
+    "is_diagonal": true
+  },
+  "A-B2 -> A-B2": {
+    "generator": "A-B2",
+    "fitter": "A-B2",
+    "r": 0.9117992472448551,
+    "diagnostics": {
+      "max_rhat": 1.0963546705592861,
+      "min_ess_bulk": 61.25052400303198,
+      "n_divergences": 0,
+      "elpd_loo": -337.62122004097796,
+      "elpd_loo_se": 69.22247247243094,
+      "max_pareto_k": 1.5081971765317128,
+      "n_bad_pareto_k": 4,
+      "n_units_loo": 4,
+      "elpd_waic": -340.54498136575506
+    },
+    "shape_recovery": {
+      "rmse": 0.06451646877084857,
+      "normalised_rmse": 0.07787770014159884,
+      "correlation": 0.9972216706684475
+    },
+    "elapsed_s": 23.282896041870117,
+    "is_diagonal": true
+  },
+  "B-Matern-B1 -> B-Matern-B1": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-Matern-B1",
+    "r": 0.9818302718915903,
+    "diagnostics": {
+      "max_rhat": 1.1185270182584393,
+      "min_ess_bulk": 32.02702603431648,
+      "n_divergences": 0,
+      "elpd_loo": -2346.8907660279056,
+      "elpd_loo_se": 276.95169203136203,
+      "max_pareto_k": 4.038209429777076,
+      "n_bad_pareto_k": 4,
+      "n_units_loo": 4,
+      "elpd_waic": -2459.8772760822158
+    },
+    "shape_recovery": {
+      "rmse": 0.05448946020398169,
+      "normalised_rmse": 0.11921993364594446,
+      "correlation": 0.9815816797057588
+    },
+    "elapsed_s": 42.99469590187073,
+    "is_diagonal": true
+  },
+  "B-Matern-B2 -> B-Matern-B2": {
+    "generator": "B-Matern-B2",
+    "fitter": "B-Matern-B2",
+    "r": 0.9914855313369147,
+    "diagnostics": {
+      "max_rhat": 1.3748898242656877,
+      "min_ess_bulk": 10.090411232830581,
+      "n_divergences": 1,
+      "elpd_loo": -69879.32592180453,
+      "elpd_loo_se": 25839.226051124537,
+      "max_pareto_k": NaN,
+      "n_bad_pareto_k": 0,
+      "n_units_loo": 4,
+      "elpd_waic": -54496376.64610988
+    },
+    "shape_recovery": {
+      "rmse": 0.16800802529866468,
+      "normalised_rmse": 0.14811697848291483,
+      "correlation": 0.6305191186865662
+    },
+    "elapsed_s": 93.7392508983612,
+    "is_diagonal": true
+  },
+  "B-SE-B1 -> B-SE-B1": {
+    "generator": "B-SE-B1",
+    "fitter": "B-SE-B1",
+    "r": 0.8740456150522419,
+    "diagnostics": {
+      "max_rhat": 1.2187191058987745,
+      "min_ess_bulk": 14.446167801647565,
+      "n_divergences": 10,
+      "elpd_loo": -2954.4785142282617,
+      "elpd_loo_se": 300.3314652137562,
+      "max_pareto_k": 24.1862218126372,
+      "n_bad_pareto_k": 4,
+      "n_units_loo": 4,
+      "elpd_waic": -6153.4547174096015
+    },
+    "shape_recovery": {
+      "rmse": 0.16015468109589429,
+      "normalised_rmse": 0.06005250452169719,
+      "correlation": 0.9981736632996069
+    },
+    "elapsed_s": 53.39429831504822,
+    "is_diagonal": true
+  },
+  "B-SE-B2 -> B-SE-B2": {
+    "generator": "B-SE-B2",
+    "fitter": "B-SE-B2",
+    "r": 0.8073398044897699,
+    "diagnostics": {
+      "max_rhat": 1.7989955147714352,
+      "min_ess_bulk": 6.613589607804375,
+      "n_divergences": 13,
+      "elpd_loo": -521461.13638423936,
+      "elpd_loo_se": 160633.26560308965,
+      "max_pareto_k": 8.459807729261277,
+      "n_bad_pareto_k": 3,
+      "n_units_loo": 4,
+      "elpd_waic": -17548280918.010616
+    },
+    "shape_recovery": {
+      "rmse": 0.5473320049248418,
+      "normalised_rmse": 0.3009091961529841,
+      "correlation": 0.9292360647619718
+    },
+    "elapsed_s": 42.973674058914185,
+    "is_diagonal": true
+  }
+}
