@@ -1,0 +1,38 @@
+{
+  "B-Matern-B1 -> B-Matern-B1": {
+    "generator": "B-Matern-B1",
+    "fitter": "B-Matern-B1",
+    "r": 0.9896567059512867,
+    "diagnostics": {
+      "max_rhat": 1.043824808895529,
+      "min_ess_bulk": 47.50559088299242,
+      "n_divergences": 1,
+      "elpd_loo": -3156.904665718771,
+      "elpd_loo_se": 193.22809938924595,
+      "max_pareto_k": 2.8138084759609217,
+      "n_bad_pareto_k": 4,
+      "n_units_loo": 4,
+      "elpd_waic": -3197.0699984903686
+    },
+    "elapsed_s": 87.46002388000488,
+    "is_diagonal": true
+  },
+  "B-Matern-B2 -> B-Matern-B2": {
+    "generator": "B-Matern-B2",
+    "fitter": "B-Matern-B2",
+    "r": 0.95857380336945,
+    "diagnostics": {
+      "max_rhat": 1.0982043108860768,
+      "min_ess_bulk": 25.19984565632972,
+      "n_divergences": 0,
+      "elpd_loo": -3005.6493581359155,
+      "elpd_loo_se": 132.4295830532286,
+      "max_pareto_k": 2.9163185312140403,
+      "n_bad_pareto_k": 4,
+      "n_units_loo": 4,
+      "elpd_waic": -3021.3940078497303
+    },
+    "elapsed_s": 254.9115982055664,
+    "is_diagonal": true
+  }
+}
