@@ -3,16 +3,23 @@ plot_recovery_grid.py
 ======================
 
 Reads recovery_grid.py's checkpointed JSON results and renders the
-6x7 (generator x fitter) grid as two heatmaps side by side:
+grid as THREE heatmaps side by side:
 
-  left  : held-out Pearson r for every (generator, fitter) cell.
-          Diagonal cells (fitter recovering its own generator's data)
-          are boxed -- that's the direct self-recovery answer.
-  right : max R-hat per cell (Bayesian fitters only; Standard has no
-          posterior, shown as hatched grey). A cell can have a high r
-          in the left panel and still be untrustworthy if this panel
-          shows it didn't converge -- exactly the pattern that made
-          the original shared-dataset comparison misleading.
+  left   : held-out Pearson r for every (generator, fitter) cell.
+           Diagonal cells (fitter recovering its own generator's data)
+           are boxed -- that's the direct self-recovery answer.
+  middle : max R-hat per cell (Bayesian fitters only; Standard has no
+           posterior, shown as hatched grey). A cell can have a high r
+           in the left panel and still be untrustworthy if this panel
+           shows it didn't converge -- exactly the pattern that made
+           the original shared-dataset comparison misleading.
+  right  : shape-recovery correlation (true vs. recovered h(tau) for
+           one representative unit). A DIFFERENT question from both of
+           the above -- a model can predict held-out data well (left)
+           using a posterior that hasn't converged (middle) while still
+           recovering a visibly wrong SHAPE (right), which is exactly
+           what the shape-comparison plots for Model B exposed and
+           which r/rhat alone would never catch.
 
 Run after recovery_grid.py has completed at least some cells --
 partial grids render fine (unfinished cells shown as hatched grey with
@@ -39,6 +46,8 @@ def plot_recovery_grid(results_path: str = "figures/recovery_grid_results.json",
     n_gen, n_fit = len(GENERATOR_NAMES), len(FITTER_NAMES)
     r_matrix = np.full((n_gen, n_fit), np.nan)
     rhat_matrix = np.full((n_gen, n_fit), np.nan)
+    shape_corr_matrix = np.full((n_gen, n_fit), np.nan)
+    shape_available = np.zeros((n_gen, n_fit), dtype=bool)
     status = np.empty((n_gen, n_fit), dtype=object)  # "ok" | "not_converged" | "no_posterior" | "pending" | "error"
 
     for gi, gname in enumerate(GENERATOR_NAMES):
@@ -58,8 +67,14 @@ def plot_recovery_grid(results_path: str = "figures/recovery_grid_results.json",
             else:
                 rhat_matrix[gi, fi] = diag["max_rhat"]
                 status[gi, fi] = "ok" if (diag["max_rhat"] <= 1.01 and diag["n_divergences"] == 0) else "not_converged"
+            shape = cell.get("shape_recovery")
+            if shape is not None and shape.get("correlation") is not None and not (
+                isinstance(shape["correlation"], float) and np.isnan(shape["correlation"])
+            ):
+                shape_corr_matrix[gi, fi] = shape["correlation"]
+                shape_available[gi, fi] = True
 
-    fig, (ax_r, ax_rhat) = plt.subplots(1, 2, figsize=(17, 7))
+    fig, (ax_r, ax_rhat, ax_shape) = plt.subplots(1, 3, figsize=(24, 7))
 
     # --- left panel: r heatmap -------------------------------------------
     im_r = ax_r.imshow(r_matrix, cmap="RdYlGn", vmin=0.0, vmax=1.0, aspect="auto")
@@ -104,13 +119,37 @@ def plot_recovery_grid(results_path: str = "figures/recovery_grid_results.json",
             if GENERATOR_NAMES[gi] == FITTER_NAMES[fi]:
                 ax_rhat.add_patch(plt.Rectangle((fi - 0.5, gi - 0.5), 1, 1, fill=False, edgecolor="blue", lw=2.5))
 
+    # --- third panel: shape-recovery correlation heatmap --------------------
+    # Deliberately its own color scale (0 to 1, not tied to r or rhat) --
+    # this is a DIFFERENT question from both other panels: does the
+    # recovered h(tau) actually look like the true one, for one
+    # representative unit, regardless of predictive accuracy or whether
+    # the posterior converged.
+    im_shape = ax_shape.imshow(shape_corr_matrix, cmap="RdYlGn", vmin=0, vmax=1, aspect="auto")
+    ax_shape.set_xticks(range(n_fit)); ax_shape.set_xticklabels(FITTER_NAMES, rotation=45, ha="right", fontsize=8)
+    ax_shape.set_yticks(range(n_gen)); ax_shape.set_yticklabels(GENERATOR_NAMES, fontsize=8)
+    ax_shape.set_xlabel("Fitter"); ax_shape.set_ylabel("Generator")
+    ax_shape.set_title("Shape recovery: corr(true h(tau), recovered h(tau)), unit 0")
+    plt.colorbar(im_shape, ax=ax_shape, fraction=0.046, pad=0.04)
+
+    for gi in range(n_gen):
+        for fi in range(n_fit):
+            if not shape_available[gi, fi]:
+                ax_shape.add_patch(plt.Rectangle((fi - 0.5, gi - 0.5), 1, 1, facecolor="lightgray", hatch="..", edgecolor="gray"))
+                label = "pending" if status[gi, fi] == "pending" else "n/a"
+                ax_shape.text(fi, gi, label, ha="center", va="center", fontsize=6, color="gray")
+            else:
+                val = shape_corr_matrix[gi, fi]
+                ax_shape.text(fi, gi, f"{val:.2f}", ha="center", va="center", fontsize=7,
+                              color="black" if val > 0.4 else "white")
+            if GENERATOR_NAMES[gi] == FITTER_NAMES[fi]:
+                ax_shape.add_patch(plt.Rectangle((fi - 0.5, gi - 0.5), 1, 1, fill=False, edgecolor="blue", lw=2.5))
+
     plt.tight_layout()
     import os
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.savefig(output_path, dpi=150)
     print(f"Saved recovery grid figure to {output_path}")
-
-    # --- text summary of the diagonal specifically -------------------------
     print("\n=== Diagonal (self-recovery) cells ===")
     for name in GENERATOR_NAMES:
         key = f"{name} -> {name}"
@@ -121,12 +160,14 @@ def plot_recovery_grid(results_path: str = "figures/recovery_grid_results.json",
             print(f"  {name:15s}: FAILED ({cell['error']})")
         else:
             diag = cell.get("diagnostics")
+            shape = cell.get("shape_recovery")
+            shape_str = f"  shape_corr={shape['correlation']:.3f}" if shape is not None else ""
             if diag is None:
-                print(f"  {name:15s}: r={cell['r']:.4f}  (no posterior)")
+                print(f"  {name:15s}: r={cell['r']:.4f}  (no posterior){shape_str}")
             else:
                 ok = "OK" if (diag["max_rhat"] <= 1.01 and diag["n_divergences"] == 0) else "NOT CONVERGED"
                 print(f"  {name:15s}: r={cell['r']:.4f}  max_rhat={diag['max_rhat']:.3f}  "
-                      f"divergences={diag['n_divergences']}  [{ok}]")
+                      f"divergences={diag['n_divergences']}  [{ok}]{shape_str}")
 
 
 if __name__ == "__main__":

@@ -258,16 +258,30 @@ def split_train_test(data: dict, test_fraction: float = 0.2):
 # 2. One cell: fit `fitter_name` to data from `generator_name`
 # ============================================================================
 
-def fit_one_cell(fitter_name, train, test, patient_idx, taus, unit_mean_surp, n_basis, fit_kwargs_A, fit_kwargs_B):
+def fit_one_cell(fitter_name, train, test, patient_idx, taus, unit_mean_surp, n_basis, fit_kwargs_A, fit_kwargs_B, gt=None, basis=None):
+    """
+    gt : the TRUE generator's ground-truth object (from
+    build_dataset_from_generator's return_ground_truth=True). Passed
+    through to every fitter so each cell -- diagonal AND off-diagonal
+    -- also reports a shape-recovery metric (true vs. recovered h(tau)
+    for unit 0), not just held-out r and convergence diagnostics. This
+    directly answers "the model predicts well, but did it recover the
+    right SHAPE" -- exactly the gap the shape-comparison plots exposed
+    that r/rhat/LOO alone never would have caught.
+    """
     if fitter_name == "Standard":
-        r = fit_predict_model1_standard(train, test, taus)
-        return r, None
+        r, shape_metrics = fit_predict_model1_standard(train, test, taus, gt=gt, basis=basis)
+        return r, None, shape_metrics
     if fitter_name in ("A-B1", "A-B2"):
-        return fit_predict_model_A(train, test, patient_idx, n_basis, fitter_name, **fit_kwargs_A)
+        return fit_predict_model_A(
+            train, test, patient_idx, n_basis, fitter_name,
+            gt=gt, basis=basis, taus=taus, **fit_kwargs_A,
+        )
     kernel_type = "matern52" if "Matern" in fitter_name else "squared_exponential"
     surprisal_in_kernel = fitter_name.endswith("B2")
     return fit_predict_model_B(
-        train, test, patient_idx, taus, unit_mean_surp, kernel_type, surprisal_in_kernel, **fit_kwargs_B
+        train, test, patient_idx, taus, unit_mean_surp, kernel_type, surprisal_in_kernel,
+        gt=gt, **fit_kwargs_B,
     )
 
 
@@ -401,13 +415,18 @@ def run_recovery_grid(
 
         # one dataset per generator, shared across all seven fitters (fair:
         # every fitter sees the exact same held-out data for this generator)
+        # return_ground_truth=True: needed so every cell (not just the ones
+        # someone remembers to check by hand) reports a shape-recovery
+        # metric alongside r/diagnostics.
         data = build_dataset_from_generator(
             generator_name, basis, taus, n_patients, n_electrodes, n_times, dt,
             snr_target=5.0, seed=seed + _GENERATOR_SEED_OFFSET[generator_name],
+            return_ground_truth=True,
         )
         train, test = split_train_test(data)
         patient_idx = data["patient_idx"]
         unit_mean_surp = data["unit_mean_surp"]
+        gt = data["ground_truth"]
 
         for fi, fitter_name in enumerate(FITTER_NAMES):
             if (generator_name, fitter_name) not in my_cells:
@@ -422,20 +441,23 @@ def run_recovery_grid(
             print(f"[{cell_idx}/{total}] {key} ...", flush=True)
             t0 = time.time()
             try:
-                r, diag = fit_one_cell(
+                r, diag, shape_metrics = fit_one_cell(
                     fitter_name, train, test, patient_idx, taus, unit_mean_surp,
-                    n_basis, fit_kwargs_A, fit_kwargs_B,
+                    n_basis, fit_kwargs_A, fit_kwargs_B, gt=gt, basis=basis,
                 )
                 elapsed = time.time() - t0
                 results[key] = {
                     "generator": generator_name, "fitter": fitter_name,
-                    "r": float(r), "diagnostics": diag, "elapsed_s": elapsed,
-                    "is_diagonal": generator_name == fitter_name,
+                    "r": float(r), "diagnostics": diag, "shape_recovery": shape_metrics,
+                    "elapsed_s": elapsed, "is_diagonal": generator_name == fitter_name,
                 }
                 flag = ""
                 if diag is not None and (diag["max_rhat"] > 1.01 or diag["n_divergences"] > 0):
                     flag = "  <-- NOT CONVERGED"
-                print(f"    r={r:.4f}  ({elapsed:.0f}s){flag}")
+                shape_str = ""
+                if shape_metrics is not None:
+                    shape_str = f"  shape_corr={shape_metrics['correlation']:.3f}"
+                print(f"    r={r:.4f}  ({elapsed:.0f}s){flag}{shape_str}")
             except Exception as exc:
                 results[key] = {
                     "generator": generator_name, "fitter": fitter_name,

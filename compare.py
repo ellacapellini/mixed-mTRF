@@ -2,7 +2,7 @@
 compare.py
 ==========
 
-THE presentation deliverable: fits all 7 models on one shared,
+THE presentation deliverable: fits all seven models on one shared,
 white-noise synthetic dataset, computes held-out predictive accuracy
 for each, and produces a comparison figure.
 
@@ -156,9 +156,25 @@ def split_train_test(data: dict, test_fraction: float = 0.2):
 # 2. Fit + predict, one function per model
 # ============================================================================
 
-def fit_predict_model1_standard(train, test, taus):
+from metrics import tf_parameter_recovery_error
+
+
+def fit_predict_model1_standard(train, test, taus, gt=None, basis=None):
     """Model 1: standard mTRF, raw lags, no surprisal, fully pooled
-    (no patient hierarchy at all -- the plain baseline)."""
+    (no patient hierarchy at all -- the plain baseline).
+
+    gt, basis : optional. When both given, ALSO returns a shape-
+    recovery metric (true vs. recovered h(tau) for unit 0) alongside r
+    -- the answer to "the model predicts well, but did it actually
+    recover the right SHAPE", a genuinely different question from held-
+    out r that this pipeline never checked before. IMPORTANT: gt.mu
+    lives in BASIS-COEFFICIENT space (length n_basis), while
+    RidgemTRF.coef_ is in RAW-LAG space (length n_lags) -- comparing
+    them directly without projecting gt's weights through basis.eval()
+    first would silently compare vectors of different meaning/length,
+    exactly the kind of unit mismatch already found and fixed once this
+    session (plot_diagonal_shapes.py's true-vs-recovered extraction).
+    """
     n_units = train["S0_raw"].shape[0]
     X_train = np.concatenate([train["S0_raw"][i] for i in range(n_units)], axis=0)
     y_train = np.concatenate([train["r"][i] for i in range(n_units)], axis=0)
@@ -167,7 +183,14 @@ def fit_predict_model1_standard(train, test, taus):
 
     model = RidgemTRF(lags=taus, alpha=1.0).fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    return pearson_r(y_test, y_pred)
+    r = pearson_r(y_test, y_pred)
+
+    shape_metrics = None
+    if gt is not None and basis is not None:
+        mu_eff_true, _ = gt.weight_for(patient=0, electrode=0)
+        true_h0 = basis.eval(taus) @ mu_eff_true
+        shape_metrics = tf_parameter_recovery_error(true_h0, model.coef_)
+    return r, shape_metrics
 
 
 def _posterior_mean(trace, name):
@@ -219,8 +242,14 @@ def _convergence_diagnostics(trace) -> dict:
     return diag
 
 
-def fit_predict_model_A(train, test, patient_idx, n_basis, variant, **fit_kwargs):
-    """Models 2 (A-C1) and 3 (A-B2)."""
+def fit_predict_model_A(train, test, patient_idx, n_basis, variant, gt=None, basis=None, taus=None, **fit_kwargs):
+    """Models 2 (A-C1) and 3 (A-B2).
+
+    gt, basis, taus : optional, all three needed together for the shape
+    metric (see fit_predict_model1_standard's docstring for why basis
+    projection matters). Compares unit 0's true vs. recovered h(tau),
+    reusing mu_eff[0] already computed below -- no extra NUTS fit, no
+    extra compute, just reading out a vector already in scope."""
     result = fit_bayesian_mixed_trf(
         train["S0_basis"], train["S1_basis"], train["r"], patient_idx,
         variant=variant, **fit_kwargs,
@@ -254,11 +283,24 @@ def fit_predict_model_A(train, test, patient_idx, n_basis, variant, **fit_kwargs
         y_pred_list.append(test["S0_basis"][i] @ mu_eff[i] + test["S1_basis"][i] @ beta_eff[i])
         y_true_list.append(test["r"][i])
     r = pearson_r(np.concatenate(y_true_list), np.concatenate(y_pred_list))
-    return r, _convergence_diagnostics(trace)
+    diag = _convergence_diagnostics(trace)
+
+    shape_metrics = None
+    if gt is not None and basis is not None and taus is not None:
+        mu_eff_true, _ = gt.weight_for(patient=0, electrode=0)
+        true_h0 = basis.eval(taus) @ mu_eff_true
+        recovered_h0 = basis.eval(taus) @ mu_eff[0]
+        shape_metrics = tf_parameter_recovery_error(true_h0, recovered_h0)
+    return r, diag, shape_metrics
 
 
-def fit_predict_model_B(train, test, patient_idx, taus, unit_mean_surp, kernel_type, surprisal_in_kernel, **fit_kwargs):
-    """Models 4-7: Model B, one of the four kernel/B1-B2 corners."""
+def fit_predict_model_B(train, test, patient_idx, taus, unit_mean_surp, kernel_type, surprisal_in_kernel, gt=None, **fit_kwargs):
+    """Models 4-7: Model B, one of the four kernel/B1-B2 corners.
+
+    gt : optional. h0/h1 already live on the raw lag grid for Model B
+    (no basis projection needed, unlike Model A/Standard), so the
+    shape comparison is direct -- reuses h0_i already computed in the
+    loop below for unit 0, no extra NUTS fit."""
     result = fit_bayesian_gp_trf(
         train["S0_raw"], train["S1_raw"], train["r"], patient_idx, taus, unit_mean_surp,
         kernel_type=kernel_type, surprisal_in_kernel=surprisal_in_kernel, **fit_kwargs,
@@ -267,13 +309,22 @@ def fit_predict_model_B(train, test, patient_idx, taus, unit_mean_surp, kernel_t
     n_units = len(patient_idx)
 
     y_pred_list, y_true_list = [], []
+    recovered_h0_unit0 = None
     for i in range(n_units):
         h0_i = _posterior_mean(trace, f"h0_{i}")
         h1_i = _posterior_mean(trace, f"h1_{i}")
+        if i == 0:
+            recovered_h0_unit0 = h0_i
         y_pred_list.append(test["S0_raw"][i] @ h0_i + test["S1_raw"][i] @ h1_i)
         y_true_list.append(test["r"][i])
     r = pearson_r(np.concatenate(y_true_list), np.concatenate(y_pred_list))
-    return r, _convergence_diagnostics(trace)
+    diag = _convergence_diagnostics(trace)
+
+    shape_metrics = None
+    if gt is not None:
+        true_h0, _ = gt.shape_for(patient=0, electrode=0, rng=None, surp=unit_mean_surp[0])
+        shape_metrics = tf_parameter_recovery_error(true_h0, recovered_h0_unit0)
+    return r, diag, shape_metrics
 
 
 # ============================================================================
@@ -308,36 +359,36 @@ def run_comparison(
     diagnostics = {}  # None for models with no posterior (Model 1, plain ridge)
 
     print("[1/7] Standard mTRF...")
-    results["Standard\n(no surprisal)"] = fit_predict_model1_standard(train, test, taus)
+    results["Standard\n(no surprisal)"], _ = fit_predict_model1_standard(train, test, taus)
     diagnostics["Standard\n(no surprisal)"] = None
 
     print("[2/7] Model A, ABC1...")
-    results["Model A\nA-B1"], diagnostics["Model A\nA-B1"] = fit_predict_model_A(
+    results["Model A\nA-B1"], diagnostics["Model A\nA-B1"], _ = fit_predict_model_A(
         train, test, patient_idx, n_basis, "A-B1", **fit_kwargs_A
     )
 
     print("[3/7] Model A, ABC2...")
-    results["Model A\nA-B2"], diagnostics["Model A\nA-B2"] = fit_predict_model_A(
+    results["Model A\nA-B2"], diagnostics["Model A\nA-B2"], _ = fit_predict_model_A(
         train, test, patient_idx, n_basis, "A-B2", **fit_kwargs_A
     )
 
     print("[4/7] Model B, Matern, B1...")
-    results["Model B\nMatern-B1"], diagnostics["Model B\nMatern-B1"] = fit_predict_model_B(
+    results["Model B\nMatern-B1"], diagnostics["Model B\nMatern-B1"], _ = fit_predict_model_B(
         train, test, patient_idx, taus, unit_mean_surp_train, "matern52", False, **fit_kwargs_B
     )
 
     print("[5/7] Model B, Matern, B2...")
-    results["Model B\nMatern-B2"], diagnostics["Model B\nMatern-B2"] = fit_predict_model_B(
+    results["Model B\nMatern-B2"], diagnostics["Model B\nMatern-B2"], _ = fit_predict_model_B(
         train, test, patient_idx, taus, unit_mean_surp_train, "matern52", True, **fit_kwargs_B
     )
 
     print("[6/7] Model B, SE, B1...")
-    results["Model B\nSE-B1"], diagnostics["Model B\nSE-B1"] = fit_predict_model_B(
+    results["Model B\nSE-B1"], diagnostics["Model B\nSE-B1"], _ = fit_predict_model_B(
         train, test, patient_idx, taus, unit_mean_surp_train, "squared_exponential", False, **fit_kwargs_B
     )
 
     print("[7/7] Model B, SE, B2...")
-    results["Model B\nSE-B2"], diagnostics["Model B\nSE-B2"] = fit_predict_model_B(
+    results["Model B\nSE-B2"], diagnostics["Model B\nSE-B2"], _ = fit_predict_model_B(
         train, test, patient_idx, taus, unit_mean_surp_train, "squared_exponential", True, **fit_kwargs_B
     )
 

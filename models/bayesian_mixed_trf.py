@@ -2,27 +2,35 @@
 bayesian_mixed_trf.py
 ======================
 
-Model 2 (A-C1) and Model 3 (A-C2) of the seven-model comparison --
+Model 2 (A-B1) and Model 3 (A-B2) of the seven-model comparison --
 the full hierarchical Bayesian fit for Model A, via NUTS in PyMC.
 Same model skeleton for both, different prior structure on beta_j
 (equations doc Section 2.4):
 
-  A-C2 (variant="A-C2"): beta_j gets its own independent prior,
+  A-B2 (variant="A-B2"): beta_j gets its own independent prior,
     free per basis function -- the full, already-validated (via
     ridge point estimate) flexible model.
-  A-C1 (variant="A-C1"): beta_j = kappa * mu_j for ONE global scalar
+  A-B1 (variant="A-B1"): beta_j = kappa * mu_j for ONE global scalar
     kappa -- the whole TRF scales by (1+kappa*surp) at every lag at
     once, shape frozen. Modelling decision made here, not fully
     pinned down in the equations doc: kappa is a single population-
     level scalar, not itself hierarchical across patients -- this
-    keeps A-C1 the genuinely SIMPLER, more constrained model to
-    compare A-C2 against, rather than a third thing with its own
+    keeps A-B1 the genuinely SIMPLER, more constrained model to
+    compare A-B2 against, rather than a third thing with its own
     hierarchy on top.
 
 Hierarchy (equations doc Section 3): patient random intercept+slope,
 electrode random intercept+slope (nested in patient), each basis
-function j getting its OWN independent 2x2 LKJ-correlated covariance
--- not one joint covariance across all J basis functions together.
+function j getting an INDEPENDENT HalfCauchy-scaled, non-centered prior
+on its own intercept/slope variance components -- NOT a joint 2x2
+LKJ-correlated covariance. An LKJ-correlated version was tried first
+and abandoned after hitting persistent divergences with the amount of
+replication available (see the comment inside build_model below for
+the full reasoning); this docstring previously still described the
+LKJ version after the code moved on from it -- fixed here to match
+what the model actually does, per the equations doc's own Section 2.5
+decision to simplify rather than force a correlation the data can't
+identify.
 
 Requires equal-length recordings across units (reasonable for
 synthetic validation, where every simulate_recording call uses the
@@ -76,7 +84,7 @@ def fit_bayesian_mixed_trf(
         unit belongs to. Multiple units sharing a patient index get
         the same patient-level random effect, plus their own
         independent electrode-level one.
-    variant : "A-C2" (beta_j free) or "A-C1" (beta_j = kappa*mu_j).
+    variant : "A-B2" (beta_j free) or "A-B1" (beta_j = kappa*mu_j).
     cores : chains run in PARALLEL processes; None -> cores=chains.
         Was hardcoded to 1, silently wasting a shared multi-core
         node's idle capacity (e.g. ETH's large-memory node) on every
