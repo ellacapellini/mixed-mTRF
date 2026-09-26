@@ -159,7 +159,28 @@ def split_train_test(data: dict, test_fraction: float = 0.2):
 from metrics import tf_parameter_recovery_error
 
 
-def fit_predict_model1_standard(train, test, taus, gt=None, basis=None):
+def _true_h0_any_family(gt, basis, taus, unit_mean_surp):
+    """Return the TRUE h(tau) for unit 0, regardless of which ground-truth
+    family `gt` came from. GroundTruthEffects (basis family: Standard,
+    A-B1, A-B2) exposes weight_for() and needs projecting through the
+    basis; GroundTruthGP (Model B family) exposes shape_for() and is
+    already on the raw lag grid. Added after the full recovery grid run
+    showed every cross-family cell (e.g. a GP-generated dataset fit by
+    Model A, or vice versa) silently discarding a fully-completed NUTS
+    fit, because the old code called one family's method unconditionally
+    -- r and the convergence diagnostics were already computed by the
+    time the AttributeError hit, so only the shape-recovery add-on was
+    ever actually broken."""
+    if hasattr(gt, "weight_for"):
+        mu_eff_true, _ = gt.weight_for(patient=0, electrode=0)
+        return basis.eval(taus) @ mu_eff_true
+    if hasattr(gt, "shape_for"):
+        true_h0, _ = gt.shape_for(patient=0, electrode=0, rng=None, surp=unit_mean_surp[0])
+        return true_h0
+    raise AttributeError(f"gt of type {type(gt).__name__} has neither weight_for nor shape_for")
+
+
+def fit_predict_model1_standard(train, test, taus, gt=None, basis=None, unit_mean_surp=None):
     """Model 1: standard mTRF, raw lags, no surprisal, fully pooled
     (no patient hierarchy at all -- the plain baseline).
 
@@ -187,8 +208,7 @@ def fit_predict_model1_standard(train, test, taus, gt=None, basis=None):
 
     shape_metrics = None
     if gt is not None and basis is not None:
-        mu_eff_true, _ = gt.weight_for(patient=0, electrode=0)
-        true_h0 = basis.eval(taus) @ mu_eff_true
+        true_h0 = _true_h0_any_family(gt, basis, taus, unit_mean_surp)
         shape_metrics = tf_parameter_recovery_error(true_h0, model.coef_)
     return r, shape_metrics
 
@@ -242,7 +262,7 @@ def _convergence_diagnostics(trace) -> dict:
     return diag
 
 
-def fit_predict_model_A(train, test, patient_idx, n_basis, variant, gt=None, basis=None, taus=None, **fit_kwargs):
+def fit_predict_model_A(train, test, patient_idx, n_basis, variant, gt=None, basis=None, taus=None, unit_mean_surp=None, **fit_kwargs):
     """Models 2 (A-C1) and 3 (A-B2).
 
     gt, basis, taus : optional, all three needed together for the shape
@@ -287,14 +307,13 @@ def fit_predict_model_A(train, test, patient_idx, n_basis, variant, gt=None, bas
 
     shape_metrics = None
     if gt is not None and basis is not None and taus is not None:
-        mu_eff_true, _ = gt.weight_for(patient=0, electrode=0)
-        true_h0 = basis.eval(taus) @ mu_eff_true
+        true_h0 = _true_h0_any_family(gt, basis, taus, unit_mean_surp)
         recovered_h0 = basis.eval(taus) @ mu_eff[0]
         shape_metrics = tf_parameter_recovery_error(true_h0, recovered_h0)
     return r, diag, shape_metrics
 
 
-def fit_predict_model_B(train, test, patient_idx, taus, unit_mean_surp, kernel_type, surprisal_in_kernel, gt=None, **fit_kwargs):
+def fit_predict_model_B(train, test, patient_idx, taus, unit_mean_surp, kernel_type, surprisal_in_kernel, gt=None, basis=None, **fit_kwargs):
     """Models 4-7: Model B, one of the four kernel/B1-B2 corners.
 
     gt : optional. h0/h1 already live on the raw lag grid for Model B
@@ -322,7 +341,7 @@ def fit_predict_model_B(train, test, patient_idx, taus, unit_mean_surp, kernel_t
 
     shape_metrics = None
     if gt is not None:
-        true_h0, _ = gt.shape_for(patient=0, electrode=0, rng=None, surp=unit_mean_surp[0])
+        true_h0 = _true_h0_any_family(gt, basis, taus, unit_mean_surp)
         shape_metrics = tf_parameter_recovery_error(true_h0, recovered_h0_unit0)
     return r, diag, shape_metrics
 

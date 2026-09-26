@@ -270,18 +270,20 @@ def fit_one_cell(fitter_name, train, test, patient_idx, taus, unit_mean_surp, n_
     that r/rhat/LOO alone never would have caught.
     """
     if fitter_name == "Standard":
-        r, shape_metrics = fit_predict_model1_standard(train, test, taus, gt=gt, basis=basis)
+        r, shape_metrics = fit_predict_model1_standard(
+            train, test, taus, gt=gt, basis=basis, unit_mean_surp=unit_mean_surp,
+        )
         return r, None, shape_metrics
     if fitter_name in ("A-B1", "A-B2"):
         return fit_predict_model_A(
             train, test, patient_idx, n_basis, fitter_name,
-            gt=gt, basis=basis, taus=taus, **fit_kwargs_A,
+            gt=gt, basis=basis, taus=taus, unit_mean_surp=unit_mean_surp, **fit_kwargs_A,
         )
     kernel_type = "matern52" if "Matern" in fitter_name else "squared_exponential"
     surprisal_in_kernel = fitter_name.endswith("B2")
     return fit_predict_model_B(
         train, test, patient_idx, taus, unit_mean_surp, kernel_type, surprisal_in_kernel,
-        gt=gt, **fit_kwargs_B,
+        gt=gt, basis=basis, **fit_kwargs_B,
     )
 
 
