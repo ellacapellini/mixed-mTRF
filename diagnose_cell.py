@@ -104,8 +104,9 @@ def main():
         snr_target=5.0, seed=gen_seed, return_ground_truth=True,
     )
     train, _test = split_train_test(data)
-    patient_idx = train["patient_idx"]
-    unit_mean_surp = train["unit_mean_surp"]
+    patient_idx = data["patient_idx"]
+    unit_mean_surp = data["unit_mean_surp"]
+    gt = data["ground_truth"]
 
     print(f"Fitting: fitter={args.fitter}, draws={draws}, tune={tune}, chains={chains}, cores={cores}")
     if args.fitter in ("A-B1", "A-B2"):
