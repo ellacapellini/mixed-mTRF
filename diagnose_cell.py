@@ -180,7 +180,20 @@ def main():
     # Each plotting block is its own try/except: a failure in one (e.g. an
     # arviz/matplotlib version mismatch) must never cost the numeric
     # results already computed and saved above, or the other plot below.
-    worst_vars = summary_sorted.index[:6].tolist()
+    # az.summary() reports per-element names like "h0_3[2]" for vector
+    # parameters, but plot_trace's var_names filter only accepts base
+    # variable names ("h0_3") -- passing the indexed form raises a KeyError
+    # even though the variable genuinely exists. Strip the "[...]" suffix
+    # and dedupe, preserving the worst-first order.
+    seen = set()
+    worst_vars = []
+    for name in summary_sorted.index:
+        base = name.split("[")[0]
+        if base not in seen:
+            seen.add(base)
+            worst_vars.append(base)
+        if len(worst_vars) == 6:
+            break
     try:
         az.plot_trace(trace, var_names=worst_vars, compact=False)
         plt.savefig(os.path.join(out_dir, "trace_worst.png"), dpi=110, bbox_inches="tight")
@@ -197,10 +210,42 @@ def main():
     # posterior is confidently in some OTHER wrong place (not matching the
     # prior, not matching truth), that points at a real bug or a genuine
     # geometry problem worth reparameterizing.
-    present_vars = [v for v in prior_posterior_vars if v in trace.posterior]
+    #
+    # Built manually rather than via az.plot_dist_comparison: that function
+    # is absent in this environment's arviz install (a version where
+    # top-level plotting is being split into arviz_base/arviz_plots/
+    # arviz_stats, and this one hasn't landed under any name we could find).
+    # Priors below are hardcoded from models/bayesian_gp_trf.py's actual
+    # pm.Normal(...) calls (ell0_prior=50.0, sigma0_prior=1.0 defaults) --
+    # if you ever change those defaults, update PRIOR_SPECS to match.
+    PRIOR_SPECS = {
+        "log_ell0_h0":   (np.log(50.0), 0.3),
+        "log_sigma0_h0": (np.log(1.0), 0.3),
+        "log_ell0_h1":   (np.log(50.0), 0.3),
+        "log_sigma0_h1": (np.log(1.0), 0.3),
+        "delta":         (0.0, 0.3),
+        "gamma":         (0.0, 0.3),
+    }
+    present_vars = [v for v in prior_posterior_vars if v in trace.posterior and v in PRIOR_SPECS]
     if present_vars:
         try:
-            az.plot_dist_comparison(trace, var_names=present_vars)
+            fig, axes = plt.subplots(1, len(present_vars), figsize=(4 * len(present_vars), 3.5))
+            if len(present_vars) == 1:
+                axes = [axes]
+            for ax, var in zip(axes, present_vars):
+                mu, sd = PRIOR_SPECS[var]
+                post = trace.posterior[var].values.flatten()
+                xmin = min(post.min(), mu - 4 * sd)
+                xmax = max(post.max(), mu + 4 * sd)
+                xs = np.linspace(xmin, xmax, 300)
+                prior_density = np.exp(-0.5 * ((xs - mu) / sd) ** 2) / (sd * np.sqrt(2 * np.pi))
+                ax.plot(xs, prior_density, "k--", label="prior", linewidth=1.5)
+                ax.hist(post, bins=40, density=True, alpha=0.6, color="C0", label="posterior")
+                ax.set_title(var, fontsize=10)
+                ax.legend(fontsize=8)
+            fig.suptitle("Prior (dashed) vs posterior (filled) -- overlap = non-identifiable given this data,\n"
+                          "not necessarily a sampler bug", fontsize=9)
+            fig.tight_layout()
             plt.savefig(os.path.join(out_dir, "prior_posterior.png"), dpi=110, bbox_inches="tight")
             plt.close("all")
             print(f"Saved prior-posterior overlay for {present_vars} to {out_dir}/prior_posterior.png")
@@ -208,7 +253,7 @@ def main():
             print(f"WARNING: prior_posterior.png failed ({exc!r}); skipping.")
             plt.close("all")
     else:
-        print(f"None of {prior_posterior_vars} found in trace.posterior -- skipping overlay.")
+        print(f"None of {prior_posterior_vars} have a known prior spec -- skipping overlay.")
 
     print(f"\nAll diagnostics written to {out_dir}/")
 
