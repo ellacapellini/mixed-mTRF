@@ -195,7 +195,8 @@ def main():
         if len(worst_vars) == 6:
             break
     try:
-        az.plot_trace(trace, var_names=worst_vars, compact=False)
+        with az.rc_context(rc={"plot.max_subplots": 120}):
+            az.plot_trace(trace, var_names=worst_vars, compact=False)
         plt.savefig(os.path.join(out_dir, "trace_worst.png"), dpi=110, bbox_inches="tight")
         plt.close("all")
         print(f"Saved trace plot to {out_dir}/trace_worst.png")
