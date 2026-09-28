@@ -133,8 +133,22 @@ def main():
             prior_posterior_vars += ["delta", "gamma"]
 
     trace = result.trace
-    trace.to_netcdf(os.path.join(out_dir, "trace.nc"))
-    print(f"Saved full trace to {out_dir}/trace.nc")
+    # Saving is best-effort: a fit can take hours, and a missing NetCDF
+    # backend (netCDF4/h5netcdf) once threw away a completed 7-hour fit
+    # because this line ran first and raised. Never let a save failure
+    # block the diagnostics below.
+    try:
+        trace.to_netcdf(os.path.join(out_dir, "trace.nc"))
+        print(f"Saved full trace to {out_dir}/trace.nc")
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARNING: could not save trace.nc ({exc!r}); falling back to pickle.")
+        try:
+            import pickle
+            with open(os.path.join(out_dir, "trace.pkl"), "wb") as f:
+                pickle.dump(trace, f)
+            print(f"Saved full trace to {out_dir}/trace.pkl")
+        except Exception as exc2:  # noqa: BLE001
+            print(f"WARNING: pickle fallback also failed ({exc2!r}); continuing without a saved trace.")
 
     # --- 1. Per-parameter Rhat/ESS, sorted worst-first (not just the max) --
     summary = az.summary(trace)
