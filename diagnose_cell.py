@@ -160,19 +160,35 @@ def main():
 
     # --- 2. BFMI: catches sampler pathologies (esp. funnels) that Rhat/
     # divergence-count alone can miss ------------------------------------
-    bfmi = az.bfmi(trace)
+    bfmi_raw = az.bfmi(trace)
+    # az.bfmi's return type has changed across arviz versions (plain array
+    # vs. a Dataset/DataTree wrapping an "energy" variable). Pull out a
+    # flat numpy array either way so the printed/saved value is just the
+    # per-chain numbers, not an object repr.
+    try:
+        bfmi = np.asarray(bfmi_raw["energy"].values if hasattr(bfmi_raw, "__getitem__") else bfmi_raw)
+    except Exception:
+        bfmi = np.asarray(bfmi_raw)
     with open(os.path.join(out_dir, "bfmi.txt"), "w") as f:
-        f.write(f"BFMI per chain: {bfmi}\n")
+        f.write(f"BFMI per chain: {bfmi.tolist()}\n")
         f.write("Rule of thumb: values well below ~0.3 indicate the sampler is\n"
                 "struggling to explore the posterior's energy distribution,\n"
                 "independent of what Rhat/divergences say.\n")
-    print(f"\nBFMI per chain: {bfmi}")
+    print(f"\nBFMI per chain: {bfmi.tolist()}")
 
     # --- 3. Trace plot for the worst offenders ---------------------------
+    # Each plotting block is its own try/except: a failure in one (e.g. an
+    # arviz/matplotlib version mismatch) must never cost the numeric
+    # results already computed and saved above, or the other plot below.
     worst_vars = summary_sorted.index[:6].tolist()
-    az.plot_trace(trace, var_names=worst_vars, compact=False)
-    plt.savefig(os.path.join(out_dir, "trace_worst.png"), dpi=110, bbox_inches="tight")
-    plt.close("all")
+    try:
+        az.plot_trace(trace, var_names=worst_vars, compact=False)
+        plt.savefig(os.path.join(out_dir, "trace_worst.png"), dpi=110, bbox_inches="tight")
+        plt.close("all")
+        print(f"Saved trace plot to {out_dir}/trace_worst.png")
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARNING: trace_worst.png failed ({exc!r}); skipping.")
+        plt.close("all")
 
     # --- 4. Prior-posterior overlap --------------------------------------
     # If the posterior for a kernel hyperparameter looks ~identical to its
@@ -183,10 +199,14 @@ def main():
     # geometry problem worth reparameterizing.
     present_vars = [v for v in prior_posterior_vars if v in trace.posterior]
     if present_vars:
-        az.plot_dist_comparison(trace, var_names=present_vars)
-        plt.savefig(os.path.join(out_dir, "prior_posterior.png"), dpi=110, bbox_inches="tight")
-        plt.close("all")
-        print(f"Saved prior-posterior overlay for {present_vars} to {out_dir}/prior_posterior.png")
+        try:
+            az.plot_dist_comparison(trace, var_names=present_vars)
+            plt.savefig(os.path.join(out_dir, "prior_posterior.png"), dpi=110, bbox_inches="tight")
+            plt.close("all")
+            print(f"Saved prior-posterior overlay for {present_vars} to {out_dir}/prior_posterior.png")
+        except Exception as exc:  # noqa: BLE001
+            print(f"WARNING: prior_posterior.png failed ({exc!r}); skipping.")
+            plt.close("all")
     else:
         print(f"None of {prior_posterior_vars} found in trace.posterior -- skipping overlay.")
 

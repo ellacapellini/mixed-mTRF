@@ -33,6 +33,7 @@ module load stack/2024-06 gcc/12.2.0 python/3.12.8 eth_proxy
 source "${HOME}/mixed-trf-venv/bin/activate"
 
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+export PYTHONUNBUFFERED=1
 export PYTENSOR_FLAGS="base_compiledir=${TMPDIR:-/tmp}/pytensor_diag_${SLURM_JOB_ID}"
 
 cd "${HOME}/mixed-mTRF"
