@@ -74,6 +74,11 @@ def main():
     ap.add_argument("--cores", type=int, default=None, help="default: cores=chains")
     ap.add_argument("--target-accept", type=float, default=0.99)
     ap.add_argument("--max-treedepth", type=int, default=14)
+    ap.add_argument("--snr-target", type=float, default=5.0,
+                     help="signal-to-noise ratio used when simulating the dataset "
+                          "(recovery_grid.py's full grid always used 5.0 -- this lets "
+                          "you sweep it to see whether a convergence pathology is "
+                          "specific to that one idealized noise level)")
     ap.add_argument("--out-dir", default=None)
     args = ap.parse_args()
 
@@ -89,7 +94,12 @@ def main():
     cores = args.cores or chains
     dt = 10.0  # matches recovery_grid.py's implicit dt (tau_max / (n_lags-1)); see note below
 
-    out_dir = args.out_dir or f"figures/diagnose/{args.generator}_{args.fitter}"
+    # snr_target folded into the dir name (only when non-default) so a sweep's
+    # runs land in separate folders instead of overwriting each other; a
+    # default-SNR run keeps the old plain name for backward compatibility
+    # with folders you've already downloaded.
+    snr_suffix = "" if args.snr_target == 5.0 else f"_snr{args.snr_target:g}"
+    out_dir = args.out_dir or f"figures/diagnose/{args.generator}_{args.fitter}{snr_suffix}"
     os.makedirs(out_dir, exist_ok=True)
 
     basis = make_raised_cosine_basis(n_basis=n_basis, tau_max=tau_max, c=5.0)
@@ -101,7 +111,7 @@ def main():
           f"n_patients={n_patients}, n_electrodes={n_electrodes}, n_times={n_times}")
     data = build_dataset_from_generator(
         args.generator, basis, taus, n_patients, n_electrodes, n_times, dt,
-        snr_target=5.0, seed=gen_seed, return_ground_truth=True,
+        snr_target=args.snr_target, seed=gen_seed, return_ground_truth=True,
     )
     train, _test = split_train_test(data)
     patient_idx = data["patient_idx"]
