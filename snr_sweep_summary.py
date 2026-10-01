@@ -40,13 +40,26 @@ def _read_max_rhat(folder: str) -> float | None:
     if not os.path.exists(path):
         return None
     # summary.txt is az.summary()'s to_string() output, sorted worst-Rhat-first
-    # by diagnose_cell.py -- the first data row's last column is the max Rhat.
+    # by diagnose_cell.py. az.summary()'s column set isn't fixed -- it can
+    # include eti89_lb/eti89_ub/mcse_mean/mcse_sd depending on arviz version
+    # and scale, so r_hat is NOT reliably the last column (an earlier version
+    # of this function assumed it was, and silently read mcse_sd instead on
+    # full-scale runs). Locate "r_hat" by its header name instead.
     with open(path) as f:
         lines = [l for l in f.read().splitlines() if l.strip()]
     if len(lines) < 2:
         return None
+    header_cols = lines[0].split()
     try:
-        return float(lines[1].split()[-1])
+        rhat_col_idx = header_cols.index("r_hat")
+    except ValueError:
+        return None
+    row_tokens = lines[1].split()
+    # row_tokens[0] is the parameter name (the index), so value columns are
+    # offset by one relative to header_cols.
+    value_idx = rhat_col_idx + 1
+    try:
+        return float(row_tokens[value_idx])
     except (ValueError, IndexError):
         return None
 
