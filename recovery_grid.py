@@ -309,6 +309,7 @@ def run_recovery_grid(
     task_id: int | None = None,
     n_tasks: int | None = None,
     cores: int | None = None,
+    noncentered_gp: bool = False,
 ):
     """
     scale="pilot" (default): small enough to finish the WHOLE 42-cell
@@ -394,7 +395,8 @@ def run_recovery_grid(
     fit_kwargs_A = dict(draws=draws, tune=tune, chains=chains, cores=cores,
                          target_accept=0.99, max_treedepth=14, seed=seed)
     fit_kwargs_B = dict(draws=draws, tune=tune, chains=chains, cores=cores,
-                         target_accept=0.99, max_treedepth=14, seed=seed)
+                         target_accept=0.99, max_treedepth=14, seed=seed,
+                         noncentered=noncentered_gp)
 
     os.makedirs(os.path.dirname(results_path), exist_ok=True)
     if os.path.exists(results_path):
@@ -506,6 +508,10 @@ if __name__ == "__main__":
     parser.add_argument("--n-tasks", type=int, default=None)
     parser.add_argument("--cores", type=int, default=None,
                          help="Parallel chains per fit. None -> cores=chains.")
+    parser.add_argument("--noncentered-gp", action="store_true",
+                         help="Sample Model B's per-unit GP draws as h = L z (non-centered). "
+                              "Default off so existing grids stay reproducible. Use a DIFFERENT "
+                              "--results-path when on, so results are never mixed.")
     args = parser.parse_args()
 
     only_cells = None
@@ -528,4 +534,5 @@ if __name__ == "__main__":
         n_times=args.n_times, n_basis=args.n_basis, tau_max=args.tau_max,
         only_diagonal=args.only_diagonal, only_cells=only_cells,
         task_id=args.task_id, n_tasks=args.n_tasks, cores=args.cores,
+        noncentered_gp=args.noncentered_gp,
     )

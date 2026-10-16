@@ -138,6 +138,7 @@ def fit_bayesian_gp_trf(
     max_treedepth: int = 10,
     seed: int = 0,
     jitter_rel: float = 1e-6,
+    noncentered: bool = False,
 ) -> BayesianGPTRFResult:
     """
     S0_all, S1_all : (n_units, n_times, n_lags) raw-lag design matrices
@@ -157,6 +158,16 @@ def fit_bayesian_gp_trf(
         unit with small sigma^2 -- scaling to each unit's own diagonal
         keeps the relative conditioning improvement comparable across
         units/patients regardless of their fitted output scale.
+    noncentered : if True, each unit's GP draw is sampled as h = L @ z with
+        z ~ N(0, I) (non-centered) instead of h ~ MvNormal(0, L) (centered).
+        The patient/electrode hyperparameter deviations were ALREADY
+        non-centered; only the GP draws themselves were centered, which
+        couples h to its own (ell, sigma) in a funnel (see ablate_standard.py:
+        on the Standard/null generator this took the predicted-signal R-hat
+        from ~2.2 to ~1.03). Default False ONLY so existing results stay
+        reproducible; pass True for new fits. Posterior variable names
+        (h0_i, h1_i) are unchanged (they become Deterministics), so
+        downstream code (compare.py's _posterior_mean, model_selection) works.
     cores : number of chains to run in PARALLEL. None (default) ->
         cores=chains, i.e. every chain gets its own process. This
         matters a lot on a shared multi-core node (e.g. ETH's 128-CPU
@@ -220,7 +231,11 @@ def fit_bayesian_gp_trf(
             jitter0_i = jitter_rel * pt.mean(pt.diag(K0_i))
             K0_i = K0_i + jitter0_i * np.eye(n_lags)
             L0_i = pt.linalg.cholesky(K0_i)
-            h0_i = pm.MvNormal(f"h0_{i}", mu=np.zeros(n_lags), chol=L0_i)
+            if noncentered:
+                z0_i = pm.Normal(f"z0_{i}", 0.0, 1.0, shape=n_lags)
+                h0_i = pm.Deterministic(f"h0_{i}", pt.dot(L0_i, z0_i))
+            else:
+                h0_i = pm.MvNormal(f"h0_{i}", mu=np.zeros(n_lags), chol=L0_i)
             h0_list.append(h0_i)
 
             log_ell_h1_i = log_ell0_h1 + a_ell_h1[p] + b_ell_h1[i]
@@ -234,7 +249,11 @@ def fit_bayesian_gp_trf(
             jitter1_i = jitter_rel * pt.mean(pt.diag(K1_i))
             K1_i = K1_i + jitter1_i * np.eye(n_lags)
             L1_i = pt.linalg.cholesky(K1_i)
-            h1_i = pm.MvNormal(f"h1_{i}", mu=np.zeros(n_lags), chol=L1_i)
+            if noncentered:
+                z1_i = pm.Normal(f"z1_{i}", 0.0, 1.0, shape=n_lags)
+                h1_i = pm.Deterministic(f"h1_{i}", pt.dot(L1_i, z1_i))
+            else:
+                h1_i = pm.MvNormal(f"h1_{i}", mu=np.zeros(n_lags), chol=L1_i)
             h1_list.append(h1_i)
 
         h0_stack = pt.stack(h0_list, axis=0)  # (n_units, n_lags)
