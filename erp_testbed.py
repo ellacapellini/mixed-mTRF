@@ -46,6 +46,7 @@ import json
 import time
 
 import numpy as np
+import scipy.sparse as sp
 from scipy.ndimage import gaussian_filter1d
 
 DT = 10.0  # ms per sample
@@ -64,15 +65,15 @@ def effect_for(mode, scale=1.0):
     return {k: (STRENGTH[k] * scale if k in on else 0.0) for k in STRENGTH}
 
 
-def erp(taus, z, eff, amp_scale=1.0, shift=0.0):
+def erp(taus, z, eff, amp_scale=1.0, shift=0.0, wscale=1.0):
     """h(tau | z) for ONE word. Onset-anchored; z is the (z-scored) driver."""
     out = np.zeros_like(taus, dtype=float)
     for name, (t, sd, a) in COMPONENTS.items():
-        aa, tt, ss = a, t + shift, sd
+        aa, tt, ss = a, t + shift, sd * wscale
         if name == "N400":
             aa = a * max(1.0 + eff["gain"] * z, 0.05)      # never flips sign
             tt = t + shift + eff["shift"] * z
-            ss = sd * np.exp(eff["width"] * z)
+            ss = sd * wscale * np.exp(eff["width"] * z)
         out += aa * np.exp(-0.5 * ((taus - tt) / ss) ** 2)
     return amp_scale * out
 
@@ -102,12 +103,13 @@ def make_noise(n_times, rng, kind):
 
 
 def make_dataset(rng, *, n_patients, n_electrodes, n_times, taus, mode, effect_frac, effect_on,
-                 shared, snr, noise, common_frac, rho, surp_mean, surp_sd):
+                 shared, snr, noise, common_frac, rho, surp_mean, surp_sd, patient_width_sd=0.0):
     n_lags = len(taus)
     shared_words = make_words(n_times, rng, rho=rho, surp_mean=surp_mean, surp_sd=surp_sd) if shared else None
     units = []
     for p in range(n_patients):
         p_scale, p_shift = np.exp(rng.normal(0, 0.15)), rng.normal(0, 8.0)
+        p_w = float(np.exp(rng.normal(0, patient_width_sd))) if patient_width_sd > 0 else 1.0
         common = make_noise(n_times, rng, noise)
         for e in range(n_electrodes):
             words = shared_words or make_words(n_times, rng, rho=rho, surp_mean=surp_mean, surp_sd=surp_sd)
@@ -117,23 +119,25 @@ def make_dataset(rng, *, n_patients, n_electrodes, n_times, taus, mode, effect_f
             e_scale = np.exp(rng.normal(0, 0.25))
             sig = np.zeros(n_times)
             for o, zz in zip(words["onsets"], drive):
-                h = erp(taus, zz, eff, p_scale * e_scale, p_shift)
+                h = erp(taus, zz, eff, p_scale * e_scale, p_shift, p_w)
                 end = min(n_times, o + n_lags)
                 sig[o:end] += h[: end - o]
             nz = np.sqrt(1 - common_frac) * make_noise(n_times, rng, noise) + np.sqrt(common_frac) * common
             nz = nz / nz.std() * np.sqrt(sig.var() / snr)
-            units.append({"patient": p, "words": words, "r": sig + nz, "signal": sig, "has_effect": has})
+            units.append({"patient": p, "wscale": p_w, "words": words, "r": sig + nz, "signal": sig, "has_effect": has})
     return units
 
 
 # ------------------------------------------------------------------ fitting
 def lag_design(onsets, values, n_times, n_lags):
-    S = np.zeros((n_times, n_lags))
+    """Lagged word-onset design as a SPARSE matrix: S[t, j] = value of the word whose onset is j samples before t."""
+    rows, cols, vals = [], [], []
     for j in range(n_lags):
         idx = onsets + j
         ok = idx < n_times
-        S[idx[ok], j] += values[ok]
-    return S
+        rows.append(idx[ok]); cols.append(np.full(int(ok.sum()), j)); vals.append(values[ok])
+    return sp.csr_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))),
+                         shape=(n_times, n_lags))
 
 
 def unit_design(u, n_times, n_lags, mods):
@@ -141,7 +145,7 @@ def unit_design(u, n_times, n_lags, mods):
     cols = [lag_design(w["onsets"], np.ones(len(w["onsets"])), n_times, n_lags)]
     for m in mods:
         cols.append(lag_design(w["onsets"], w[{"surp": "z", "conf": "conf"}[m]], n_times, n_lags))
-    return np.hstack(cols)
+    return sp.hstack(cols, format="csr")
 
 
 def _blocks(n, k):
@@ -151,16 +155,16 @@ def _blocks(n, k):
 def ridge_cv_c(X, y, cs=np.logspace(-3, 1, 9), k=5):
     """Pick relative ridge strength c (lambda = c * tr(X'X)/p) by contiguous k-fold CV."""
     n, p = X.shape
-    XtX, Xty = X.T @ X, X.T @ y
+    XtX, Xty = (X.T @ X).toarray(), X.T @ y
     scale = np.trace(XtX) / p
     folds = _blocks(n, k)
-    blk = [(X[b].T @ X[b], X[b].T @ y[b], b) for b in folds]
+    blk = [((X[b[0]:b[-1] + 1].T @ X[b[0]:b[-1] + 1]).toarray(), X[b[0]:b[-1] + 1].T @ y[b], b) for b in folds]
     best, best_err = cs[0], np.inf
     for c in cs:
         err = 0.0
         for xx, xy, b in blk:
             w = np.linalg.solve(XtX - xx + c * scale * np.eye(p), Xty - xy)
-            err += np.sum((y[b] - X[b] @ w) ** 2)
+            err += np.sum((y[b] - X[b[0]:b[-1] + 1] @ w) ** 2)
         if err < best_err:
             best, best_err = c, err
     return best
@@ -185,9 +189,12 @@ def decompose(h0, h1, taus, window=(250.0, 600.0), center=None, smooth=1.0):
     return float(coef[0]), float(coef[1]), float(coef[2]), float(tc)
 
 
-def argmax_latency_shift(h0, h1, taus):
-    lat = lambda s: taus[np.argmax(np.abs(h0 + s * h1))]
-    return float(lat(+1.0) - lat(-1.0))                      # ms between +1 SD and -1 SD
+def argmax_latency_shift(h0, h1, taus, window=None):
+    """ms between the |h| peak at +1 SD and at -1 SD. window=None: global argmax over all lags
+    (what Section 3 does). window=(lo, hi): argmax restricted to a pre-specified component window."""
+    sel = np.ones_like(taus, bool) if window is None else (taus >= window[0]) & (taus <= window[1])
+    lat = lambda s: taus[sel][np.argmax(np.abs((h0 + s * h1)[sel]))]
+    return float(lat(+1.0) - lat(-1.0))
 
 
 # --------------------------------------------------------------------- run
@@ -199,14 +206,15 @@ def run_scenario(args, mode, seed):
         rng, n_patients=args.n_patients, n_electrodes=args.n_electrodes, n_times=args.n_times,
         taus=taus, mode=mode, effect_frac=args.effect_frac, effect_on=args.effect_on,
         shared=args.shared_stimulus, snr=args.snr, noise=args.noise, common_frac=args.common_noise,
-        rho=args.confound_rho, surp_mean=args.surp_mean, surp_sd=args.surp_sd)
+        rho=args.confound_rho, surp_mean=args.surp_mean, surp_sd=args.surp_sd,
+        patient_width_sd=getattr(args, "patient_width_sd", 0.0))
 
     mods_sets = {"M0": [], "M1": ["surp"], "M2": ["surp", "conf"]}
     cache = {}
     for m, mods in mods_sets.items():
         for i, u in enumerate(units):
             X = unit_design(u, args.n_times, n_lags, mods)
-            cache[(m, i)] = (X.T @ X, X.T @ u["r"], X, u["r"])
+            cache[(m, i)] = ((X.T @ X).toarray(), X.T @ u["r"], X, u["r"])
 
     # per-unit M1 fits (lambda by CV), population = mean over units
     cs, H0, H1 = [], [], []
@@ -230,6 +238,16 @@ def run_scenario(args, mode, seed):
         boots.append((bg, bs, bo))
     boots = np.array(boots)
     lo, hi = np.percentile(boots, [5, 95], axis=0)
+
+    # Alternative interval: summary-statistics approach. One decomposition PER PATIENT,
+    # then a t-interval over patients (df = P-1). Honest about n = patients.
+    from scipy import stats as _st
+    pg = np.array([decompose(H0[pat == q].mean(0), H1[pat == q].mean(0), taus, center=args.center_ms)[:3]
+                   for q in range(args.n_patients)])
+    t_est = pg.mean(0)
+    t_se = pg.std(0, ddof=1) / np.sqrt(args.n_patients)
+    tq = _st.t.ppf(0.95, args.n_patients - 1)
+    t_lo, t_hi = t_est - tq * t_se, t_est + tq * t_se
 
     # M2: surprisal's OWN modulation after the confound is also in the model
     H0b, Hs = [], []
@@ -259,8 +277,12 @@ def run_scenario(args, mode, seed):
         "truth_g_shift_omega": truth,
         "est_g_shift_omega": [g, sh, om], "ci90_lo": lo.tolist(), "ci90_hi": hi.tolist(),
         "covered": [bool(lo[k] <= truth[k] <= hi[k]) for k in range(3)],
+        "t_est": t_est.tolist(), "t_lo": t_lo.tolist(), "t_hi": t_hi.tolist(),
+        "t_covered": [bool(t_lo[k] <= truth[k] <= t_hi[k]) for k in range(3)],
+        "boot_halfwidth": ((hi - lo) / 2).tolist(),
         "m2_surprisal_g_shift_omega_given_confound": list(m2),
         "argmax_latency_shift_ms": argmax_latency_shift(H0.mean(0), H1.mean(0), taus),
+        "argmax_window_shift_ms": argmax_latency_shift(H0.mean(0), H1.mean(0), taus, window=(250.0, 600.0)),
         "lopo_r": {m: float(v.mean()) for m, v in r_by.items()},
         "lopo_gain_M1_minus_M0": float((r_by["M1"] - r_by["M0"]).mean()),
         "lopo_frac_patients_M1_better": float(((r_by["M1"] - r_by["M0"]) > 0).mean()),
@@ -285,6 +307,8 @@ def main():
     ap.add_argument("--effect_frac", type=float, default=1.0, help="fraction of electrodes carrying the effect")
     ap.add_argument("--effect_on", choices=["surprisal", "confound"], default="surprisal")
     ap.add_argument("--confound_rho", type=float, default=0.0, help="corr(confound, surprisal)")
+    ap.add_argument("--patient_width_sd", type=float, default=0.0,
+                    help="sd of log width-scale across PATIENTS (patients differ in smoothness); 0 = off")
     ap.add_argument("--shared_stimulus", action="store_true")
     ap.add_argument("--surp_mean", type=float, default=7.0)
     ap.add_argument("--surp_sd", type=float, default=3.0)
@@ -298,7 +322,7 @@ def main():
           f"width {STRENGTH['width']:+.2f} (log); effect_frac={args.effect_frac}, effect_on={args.effect_on}, "
           f"rho={args.confound_rho}, noise={args.noise}, common={args.common_noise}, snr={args.snr}, "
           f"shared={args.shared_stimulus}")
-    hdr = f"{'mode':8} {'':4}{'gain':>8}{'shift ms':>10}{'width':>8}   {'argmax':>7} {'LOPO dr M1-M0':>14} {'M2-M1':>7}"
+    hdr = f"{'mode':8} {'':4}{'gain':>8}{'shift ms':>10}{'width':>8}   {'argmax':>7}{'argmaxW':>8} {'LOPO dr M1-M0':>14} {'M2-M1':>7}"
     print(hdr)
     rows = []
     for mode in args.modes:
@@ -310,7 +334,8 @@ def main():
         cov = np.mean([r["covered"] for r in res], 0)
         print(f"{mode:8} truth {t[0]:8.2f}{t[1]:10.1f}{t[2]:8.2f}")
         print(f"{'':8} est   {e[0]:8.2f}{e[1]:10.1f}{e[2]:8.2f}   "
-              f"{np.mean([r['argmax_latency_shift_ms'] for r in res]):7.1f} "
+              f"{np.mean([r['argmax_latency_shift_ms'] for r in res]):7.1f}"
+              f"{np.mean([r['argmax_window_shift_ms'] for r in res]):8.1f} "
               f"{np.mean([r['lopo_gain_M1_minus_M0'] for r in res]):14.4f} "
               f"{np.mean([r['lopo_gain_M2_minus_M1'] for r in res]):7.4f}")
         m2e = np.mean([r["m2_surprisal_g_shift_omega_given_confound"] for r in res], 0)
@@ -318,6 +343,14 @@ def main():
         print(f"{'':8} sd    {sd[0]:8.2f}{sd[1]:10.1f}{sd[2]:8.2f}   90%-CI coverage of truth: "
               f"gain {cov[0]:.2f}, shift {cov[1]:.2f}, width {cov[2]:.2f}   "
               f"(LOPO: M1>M0 in {np.mean([r['lopo_frac_patients_M1_better'] for r in res]):.0%} of patients)")
+        tc_ = np.mean([r["t_covered"] for r in res], 0)
+        bh = np.mean([r["boot_halfwidth"] for r in res], 0)
+        th = np.mean([(np.array(r["t_hi"]) - np.array(r["t_lo"])) / 2 for r in res], 0)
+        te = np.mean([r["t_est"] for r in res], 0)
+        print(f"{'':8} CALIBRATION  bias(est-truth): {e[0]-t[0]:+.3f} {e[1]-t[1]:+.2f} {e[2]-t[2]:+.3f} | "
+              f"empirical sd: {sd[0]:.3f} {sd[1]:.2f} {sd[2]:.3f} | boot half-width: {bh[0]:.3f} {bh[1]:.2f} {bh[2]:.3f} "
+              f"| t half-width: {th[0]:.3f} {th[1]:.2f} {th[2]:.3f}")
+        print(f"{'':8} coverage90   bootstrap: {cov[0]:.2f} {cov[1]:.2f} {cov[2]:.2f}   patient-t: {tc_[0]:.2f} {tc_[1]:.2f} {tc_[2]:.2f}")
     if args.out:
         with open(args.out, "a") as f:
             for r in rows:
