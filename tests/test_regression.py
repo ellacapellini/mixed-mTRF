@@ -59,3 +59,10 @@ def test_summarizer_matches_legacy(tmp_path):
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     assert r.stdout.strip() == ref.strip()
+
+
+def test_stage1_figures_render(tmp_path):
+    """Every stage-1 figure function runs on the small fixture results (smoke test, not pixel comparison)."""
+    from mixed_trf.evaluation.figures import main_stage1
+    main_stage1(["--glob", str(FIX / "results_in" / "*.jsonl"), "--out", str(tmp_path)])
+    assert (tmp_path / "s1_recovery.png").exists() and (tmp_path / "s1_detection.png").exists()

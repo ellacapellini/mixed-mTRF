@@ -21,7 +21,7 @@ import numpy as np
 from mixed_trf.core.design import unit_design
 from mixed_trf.estimators.decomposition import decompose
 from mixed_trf.models.registry import MODELS, fit
-from mixed_trf.simulation.templates import DT, STRENGTH
+from mixed_trf.simulation.templates import DT, STRENGTH, effect_for, erp
 from mixed_trf.simulation.testbed import make_dataset
 
 
@@ -87,6 +87,13 @@ def run(a):
     dec = np.array([decompose(hs[i, 0], hs[i, 1], taus)[:3] for i in idx])
     row["est_90ci"] = {k: [float(np.percentile(dec[:, j], 5)), float(np.percentile(dec[:, j], 95))]
                        for j, k in enumerate(("gain", "shift_ms", "width"))}
+    # recovered response curves vs the simulated truth (h1 truth = effect of +1 SD of surprisal, central difference)
+    eff = effect_for(a.mode)
+    row["trf"] = {"taus": taus.tolist(),
+                  "mean": hs.mean(axis=0).tolist(),
+                  "lo": np.percentile(hs, 5, axis=0).tolist(), "hi": np.percentile(hs, 95, axis=0).tolist(),
+                  "truth": [erp(taus, 0.0, eff).tolist(), ((erp(taus, 1.0, eff) - erp(taus, -1.0, eff)) / 2).tolist()],
+                  "note": "posterior is on the standardised-y scale; compare SHAPES (figures rescale by least squares)"}
     if a.model.endswith("hyp") or "hyp" in a.model:
         ell = np.asarray(tr.posterior["ell_unit_0"].values).mean(axis=(0, 1))
         wt = np.array([u["wscale"] for u in units])[keep]

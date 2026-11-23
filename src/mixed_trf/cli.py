@@ -6,6 +6,8 @@
   testbed [...]             single-electrode-family ERP testbed (erp_testbed arguments)
   stage2  --model M [...]   fit ONE Bayesian model on simulated data (one model at a time)
   summarize [...]           gates/verdict table over stage-1 jsonl results
+  plot-stage1 [...]         Stage-1 figures (recovery, bias, detection, coverage, selection, power map)
+  plot-stage2 [...]         Stage-2 figures (TRF recovery, ladder, diagnostics, held-out, smoothness)
   plot-learning [...]       learning-evolution figures from stage-2 jsonl results
 """
 from __future__ import annotations
@@ -34,6 +36,10 @@ def main(argv=None):
         import runpy
         sys.argv = ["summarize"] + rest
         runpy.run_module("mixed_trf.evaluation.summarize", run_name="__main__")
+    elif cmd == "plot-stage1":
+        from .evaluation.figures import main_stage1 as m; m(rest)
+    elif cmd == "plot-stage2":
+        from .evaluation.figures import main_stage2 as m; m(rest)
     elif cmd == "plot-learning":
         from .evaluation.learning import main as m; m(rest)
     else:
