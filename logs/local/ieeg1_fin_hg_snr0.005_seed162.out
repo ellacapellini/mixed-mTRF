@@ -1,0 +1,8 @@
+           (first-order on the same data: est g +0.017 sh -1.8 w +0.000)
+[null    ] truth(sel) g 0.00 sh 0.0 w 0.00 | est g +0.008 sh +2.8 w -0.023  CI-cover [True, True, True] | sel precision 0.23 noise-corr(sel) 0.30 | LOPO dR2 sel -0.00002 all -0.00000 | argmax glob/win -10/-10 | 17s
+           (first-order on the same data: est g +0.014 sh -2.7 w -0.011)
+[gain    ] truth(sel) g 0.14 sh 0.0 w 0.00 | est g +0.005 sh +5.9 w -0.021  CI-cover [False, True, True] | sel precision 0.23 noise-corr(sel) 0.30 | LOPO dR2 sel -0.00002 all -0.00000 | argmax glob/win -10/-10 | 17s
+           (first-order on the same data: est g +0.010 sh +4.3 w -0.002)
+[latency ] truth(sel) g 0.00 sh 11.7 w 0.00 | est g +0.003 sh +7.3 w -0.050  CI-cover [True, True, True] | sel precision 0.23 noise-corr(sel) 0.30 | LOPO dR2 sel -0.00002 all -0.00000 | argmax glob/win -10/40 | 17s
+           (first-order on the same data: est g +0.006 sh -2.9 w +0.018)
+[width   ] truth(sel) g 0.00 sh 0.0 w 0.12 | est g -0.003 sh +4.7 w +0.006  CI-cover [True, True, False] | sel precision 0.23 noise-corr(sel) 0.30 | LOPO dR2 sel -0.00002 all -0.00000 | argmax glob/win -10/-10 | 17s

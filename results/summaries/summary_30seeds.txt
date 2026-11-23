@@ -1,0 +1,183 @@
+720 rows from 30 seeds, 24 cells
+
+[hg snr=0.005 null    ] seeds=30  sel.precision=0.30  noise-corr(sel)=0.30
+    SELECTED  truth [0. 0. 0.] est [ 0.007 -0.455  0.002] bias [ 0.007 -0.455  0.002] sdSeeds [0.045 3.215 0.02 ] CIhalf [0.058 4.875 0.04 ]
+              coverage90 [0.87 0.97 0.93]  P(CI excludes 0) [0.13 0.03 0.07]  LOPO dR2 -0.00000 (>0 in 23% of seeds)
+    ALL       bias [ 0.005  0.159 -0.003]  P(CI excludes 0) [0.07 0.   0.13]  LOPO dR2 -0.00000
+    argmax shift (global / windowed): 5 / 1 ms
+[hg snr=0.005 gain    ] seeds=30  sel.precision=0.30  noise-corr(sel)=0.30
+    SELECTED  truth [0.157 0.    0.   ] est [ 0.041 -1.401  0.006] bias [-0.116 -1.401  0.006] sdSeeds [0.052 3.904 0.031] CIhalf [0.083 6.41  0.057]
+              coverage90 [0.23 0.93 0.97]  P(CI excludes 0) [0.17 0.07 0.03]  LOPO dR2 +0.00001 (>0 in 67% of seeds)
+    ALL       bias [-0.087 -1.163  0.015]  P(CI excludes 0) [0.27 0.1  0.13]  LOPO dR2 +0.00000
+    argmax shift (global / windowed): 104 / 12 ms
+[hg snr=0.005 latency ] seeds=30  sel.precision=0.30  noise-corr(sel)=0.30
+    SELECTED  truth [ 0.    13.082  0.   ] est [-0.012  8.352  0.011] bias [-0.012 -4.73   0.011] sdSeeds [0.048 3.262 0.024] CIhalf [0.063 6.035 0.041]
+              coverage90 [0.83 0.5  0.97]  P(CI excludes 0) [0.17 0.83 0.03]  LOPO dR2 +0.00000 (>0 in 53% of seeds)
+    ALL       bias [-0.024 -3.128  0.008]  P(CI excludes 0) [0.1  0.83 0.13]  LOPO dR2 +0.00000
+    argmax shift (global / windowed): -11 / 11 ms
+[hg snr=0.005 width   ] seeds=30  sel.precision=0.31  noise-corr(sel)=0.30
+    SELECTED  truth [0.    0.    0.131] est [-0.008 -1.714  0.04 ] bias [-0.008 -1.714 -0.091] sdSeeds [0.047 3.811 0.029] CIhalf [0.064 5.606 0.045]
+              coverage90 [0.83 0.9  0.17]  P(CI excludes 0) [0.17 0.1  0.5 ]  LOPO dR2 +0.00000 (>0 in 50% of seeds)
+    ALL       bias [-0.009 -1.156 -0.086]  P(CI excludes 0) [0.1 0.1 0.4]  LOPO dR2 -0.00000
+    argmax shift (global / windowed): -16 / 4 ms
+[hg snr=0.03 null    ] seeds=30  sel.precision=0.46  noise-corr(sel)=0.30
+    SELECTED  truth [0. 0. 0.] est [ 0.002  0.447 -0.002] bias [ 0.002  0.447 -0.002] sdSeeds [0.016 1.234 0.014] CIhalf [0.025 2.184 0.022]
+              coverage90 [0.87 0.93 0.9 ]  P(CI excludes 0) [0.13 0.07 0.1 ]  LOPO dR2 -0.00000 (>0 in 23% of seeds)
+    ALL       bias [ 0.     0.073 -0.003]  P(CI excludes 0) [0.1  0.03 0.1 ]  LOPO dR2 -0.00000
+    argmax shift (global / windowed): -0 / 2 ms
+[hg snr=0.03 gain    ] seeds=30  sel.precision=0.46  noise-corr(sel)=0.30
+    SELECTED  truth [0.154 0.    0.   ] est [ 0.153 -1.595  0.034] bias [-1.000e-03 -1.595e+00  3.400e-02] sdSeeds [0.048 2.829 0.026] CIhalf [0.068 4.58  0.041]
+              coverage90 [0.97 1.   0.5 ]  P(CI excludes 0) [0.97 0.   0.5 ]  LOPO dR2 +0.00021 (>0 in 100% of seeds)
+    ALL       bias [-1.000e-03 -1.241e+00  2.500e-02]  P(CI excludes 0) [0.97 0.   0.37]  LOPO dR2 +0.00002
+    argmax shift (global / windowed): 219 / 1 ms
+[hg snr=0.03 latency ] seeds=30  sel.precision=0.46  noise-corr(sel)=0.30
+    SELECTED  truth [ 0.    12.756  0.   ] est [-0.033 10.804  0.032] bias [-0.033 -1.952  0.032] sdSeeds [0.021 3.652 0.017] CIhalf [0.032 4.518 0.029]
+              coverage90 [0.37 0.8  0.4 ]  P(CI excludes 0) [0.63 1.   0.6 ]  LOPO dR2 +0.00009 (>0 in 97% of seeds)
+    ALL       bias [-0.036 -1.517  0.038]  P(CI excludes 0) [0.6 1.  0.6]  LOPO dR2 +0.00001
+    argmax shift (global / windowed): -8 / 22 ms
+[hg snr=0.03 width   ] seeds=30  sel.precision=0.46  noise-corr(sel)=0.30
+    SELECTED  truth [0.    0.    0.129] est [0.005 0.506 0.075] bias [ 0.005  0.506 -0.054] sdSeeds [0.018 1.864 0.022] CIhalf [0.028 3.381 0.036]
+              coverage90 [0.87 0.8  0.3 ]  P(CI excludes 0) [0.13 0.2  0.93]  LOPO dR2 +0.00010 (>0 in 97% of seeds)
+    ALL       bias [ 0.008  0.57  -0.051]  P(CI excludes 0) [0.17 0.27 0.97]  LOPO dR2 +0.00001
+    argmax shift (global / windowed): -5 / -0 ms
+[hg snr=0.2 null    ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.30
+    SELECTED  truth [0. 0. 0.] est [-0.    -0.035 -0.001] bias [-0.    -0.035 -0.001] sdSeeds [0.003 0.146 0.003] CIhalf [0.004 0.207 0.004]
+              coverage90 [0.83 0.83 0.87]  P(CI excludes 0) [0.17 0.17 0.13]  LOPO dR2 -0.00000 (>0 in 27% of seeds)
+    ALL       bias [ 0.    -0.119 -0.001]  P(CI excludes 0) [0.17 0.1  0.1 ]  LOPO dR2 -0.00000
+    argmax shift (global / windowed): 0 / 0 ms
+[hg snr=0.2 gain    ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.30
+    SELECTED  truth [0.149 0.    0.   ] est [ 0.15  -0.412  0.013] bias [ 0.001 -0.412  0.013] sdSeeds [0.021 0.251 0.007] CIhalf [0.039 0.309 0.009]
+              coverage90 [1.   0.23 0.13]  P(CI excludes 0) [1.   0.77 0.87]  LOPO dR2 +0.00336 (>0 in 100% of seeds)
+    ALL       bias [ 0.    -0.528  0.013]  P(CI excludes 0) [1.   0.43 0.57]  LOPO dR2 +0.00014
+    argmax shift (global / windowed): 10 / 0 ms
+[hg snr=0.2 latency ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.30
+    SELECTED  truth [ 0.    12.261  0.   ] est [-0.026 10.564  0.039] bias [-0.026 -1.697  0.039] sdSeeds [0.006 1.552 0.006] CIhalf [0.008 2.852 0.012]
+              coverage90 [0.03 0.9  0.  ]  P(CI excludes 0) [0.97 1.   1.  ]  LOPO dR2 +0.00157 (>0 in 100% of seeds)
+    ALL       bias [-0.027 -1.841  0.041]  P(CI excludes 0) [0.93 1.   1.  ]  LOPO dR2 +0.00007
+    argmax shift (global / windowed): 21 / 21 ms
+[hg snr=0.2 width   ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.30
+    SELECTED  truth [0.    0.    0.125] est [0.015 2.065 0.08 ] bias [ 0.015  2.065 -0.045] sdSeeds [0.004 0.395 0.012] CIhalf [0.006 0.637 0.022]
+              coverage90 [0.   0.03 0.  ]  P(CI excludes 0) [1.   0.97 1.  ]  LOPO dR2 +0.00170 (>0 in 100% of seeds)
+    ALL       bias [ 0.015  1.893 -0.046]  P(CI excludes 0) [0.8  0.97 1.  ]  LOPO dR2 +0.00007
+    argmax shift (global / windowed): -0 / -0 ms
+[lfp snr=0.005 null    ] seeds=30  sel.precision=0.31  noise-corr(sel)=0.41
+    SELECTED  truth [0. 0. 0.] est [ 0.01  -0.075  0.003] bias [ 0.01  -0.075  0.003] sdSeeds [0.044 3.338 0.02 ] CIhalf [0.064 5.183 0.038]
+              coverage90 [0.93 0.9  0.93]  P(CI excludes 0) [0.07 0.1  0.07]  LOPO dR2 -0.00001 (>0 in 20% of seeds)
+    ALL       bias [ 0.017 -0.25   0.004]  P(CI excludes 0) [0.03 0.1  0.17]  LOPO dR2 -0.00000
+    argmax shift (global / windowed): -13 / -2 ms
+[lfp snr=0.005 gain    ] seeds=30  sel.precision=0.31  noise-corr(sel)=0.41
+    SELECTED  truth [0.15 0.   0.  ] est [ 0.035 -1.251  0.011] bias [-0.114 -1.251  0.011] sdSeeds [0.046 4.256 0.029] CIhalf [0.082 6.525 0.054]
+              coverage90 [0.23 0.87 0.9 ]  P(CI excludes 0) [0.13 0.13 0.1 ]  LOPO dR2 +0.00000 (>0 in 63% of seeds)
+    ALL       bias [-0.09  -0.977  0.018]  P(CI excludes 0) [0.33 0.2  0.23]  LOPO dR2 +0.00000
+    argmax shift (global / windowed): 112 / 7 ms
+[lfp snr=0.005 latency ] seeds=30  sel.precision=0.31  noise-corr(sel)=0.41
+    SELECTED  truth [ 0.   12.45  0.  ] est [-9.000e-03  7.512e+00  7.000e-03] bias [-0.009 -4.937  0.007] sdSeeds [0.048 4.032 0.023] CIhalf [0.07  5.995 0.039]
+              coverage90 [1.   0.53 0.87]  P(CI excludes 0) [0.   0.57 0.13]  LOPO dR2 -0.00000 (>0 in 37% of seeds)
+    ALL       bias [-0.007 -4.168  0.012]  P(CI excludes 0) [0.07 0.83 0.13]  LOPO dR2 +0.00000
+    argmax shift (global / windowed): -7 / -22 ms
+[lfp snr=0.005 width   ] seeds=30  sel.precision=0.31  noise-corr(sel)=0.41
+    SELECTED  truth [0.    0.    0.125] est [-0.007 -1.202  0.032] bias [-0.007 -1.202 -0.093] sdSeeds [0.045 3.641 0.024] CIhalf [0.069 5.848 0.042]
+              coverage90 [0.9  0.93 0.17]  P(CI excludes 0) [0.1  0.07 0.3 ]  LOPO dR2 -0.00000 (>0 in 40% of seeds)
+    ALL       bias [ 0.004 -1.559 -0.086]  P(CI excludes 0) [0.1  0.1  0.47]  LOPO dR2 +0.00000
+    argmax shift (global / windowed): -18 / 1 ms
+[lfp snr=0.03 null    ] seeds=30  sel.precision=0.49  noise-corr(sel)=0.40
+    SELECTED  truth [0. 0. 0.] est [ 0.001  0.164 -0.003] bias [ 0.001  0.164 -0.003] sdSeeds [0.015 1.386 0.01 ] CIhalf [0.024 2.353 0.024]
+              coverage90 [0.9  0.9  0.93]  P(CI excludes 0) [0.1  0.1  0.07]  LOPO dR2 -0.00001 (>0 in 10% of seeds)
+    ALL       bias [-0.     0.54  -0.005]  P(CI excludes 0) [0.13 0.07 0.07]  LOPO dR2 -0.00000
+    argmax shift (global / windowed): 1 / 2 ms
+[lfp snr=0.03 gain    ] seeds=30  sel.precision=0.49  noise-corr(sel)=0.40
+    SELECTED  truth [0.145 0.    0.   ] est [ 0.134 -2.315  0.032] bias [-0.011 -2.315  0.032] sdSeeds [0.037 2.469 0.019] CIhalf [0.069 4.548 0.045]
+              coverage90 [0.97 0.9  0.67]  P(CI excludes 0) [0.93 0.1  0.33]  LOPO dR2 +0.00019 (>0 in 100% of seeds)
+    ALL       bias [-0.003 -1.4    0.029]  P(CI excludes 0) [0.97 0.03 0.37]  LOPO dR2 +0.00002
+    argmax shift (global / windowed): 187 / 2 ms
+[lfp snr=0.03 latency ] seeds=30  sel.precision=0.49  noise-corr(sel)=0.40
+    SELECTED  truth [ 0.    12.021  0.   ] est [-0.031  9.5    0.025] bias [-0.031 -2.522  0.025] sdSeeds [0.017 3.092 0.016] CIhalf [0.031 4.54  0.029]
+              coverage90 [0.4  0.8  0.53]  P(CI excludes 0) [0.6  0.9  0.47]  LOPO dR2 +0.00009 (>0 in 97% of seeds)
+    ALL       bias [-0.038 -1.284  0.033]  P(CI excludes 0) [0.57 1.   0.6 ]  LOPO dR2 +0.00001
+    argmax shift (global / windowed): 3 / 20 ms
+[lfp snr=0.03 width   ] seeds=30  sel.precision=0.49  noise-corr(sel)=0.40
+    SELECTED  truth [0.    0.    0.122] est [0.002 0.112 0.065] bias [ 0.002  0.112 -0.057] sdSeeds [0.017 2.189 0.02 ] CIhalf [0.027 3.557 0.038]
+              coverage90 [0.87 0.77 0.13]  P(CI excludes 0) [0.13 0.23 0.83]  LOPO dR2 +0.00009 (>0 in 93% of seeds)
+    ALL       bias [ 0.004  0.527 -0.055]  P(CI excludes 0) [0.13 0.2  0.93]  LOPO dR2 +0.00001
+    argmax shift (global / windowed): 2 / -1 ms
+[lfp snr=0.2 null    ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.41
+    SELECTED  truth [0. 0. 0.] est [-0.    -0.055 -0.001] bias [-0.    -0.055 -0.001] sdSeeds [0.003 0.157 0.002] CIhalf [0.005 0.222 0.004]
+              coverage90 [0.9  0.93 0.9 ]  P(CI excludes 0) [0.1  0.07 0.1 ]  LOPO dR2 -0.00000 (>0 in 20% of seeds)
+    ALL       bias [-0.    -0.089 -0.001]  P(CI excludes 0) [0.13 0.1  0.1 ]  LOPO dR2 -0.00000
+    argmax shift (global / windowed): -0 / -0 ms
+[lfp snr=0.2 gain    ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.41
+    SELECTED  truth [0.147 0.    0.   ] est [ 0.147 -0.436  0.013] bias [ 0.    -0.436  0.013] sdSeeds [0.02  0.259 0.007] CIhalf [0.038 0.33  0.009]
+              coverage90 [1.   0.23 0.13]  P(CI excludes 0) [1.   0.77 0.87]  LOPO dR2 +0.00337 (>0 in 100% of seeds)
+    ALL       bias [ 0.001 -0.379  0.014]  P(CI excludes 0) [1.   0.37 0.53]  LOPO dR2 +0.00014
+    argmax shift (global / windowed): 10 / 0 ms
+[lfp snr=0.2 latency ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.40
+    SELECTED  truth [ 0.    12.057  0.   ] est [-0.026 10.348  0.038] bias [-0.026 -1.709  0.038] sdSeeds [0.006 1.552 0.006] CIhalf [0.009 2.748 0.011]
+              coverage90 [0.03 0.73 0.  ]  P(CI excludes 0) [0.97 1.   1.  ]  LOPO dR2 +0.00156 (>0 in 100% of seeds)
+    ALL       bias [-0.028 -1.823  0.04 ]  P(CI excludes 0) [0.93 1.   1.  ]  LOPO dR2 +0.00007
+    argmax shift (global / windowed): 22 / 22 ms
+[lfp snr=0.2 width   ] seeds=30  sel.precision=0.90  noise-corr(sel)=0.41
+    SELECTED  truth [0.    0.    0.124] est [0.015 2.033 0.079] bias [ 0.015  2.033 -0.045] sdSeeds [0.004 0.399 0.012] CIhalf [0.006 0.603 0.021]
+              coverage90 [0.03 0.03 0.  ]  P(CI excludes 0) [0.97 0.97 1.  ]  LOPO dR2 +0.00174 (>0 in 100% of seeds)
+    ALL       bias [ 0.014  1.994 -0.047]  P(CI excludes 0) [0.77 1.   1.  ]  LOPO dR2 +0.00007
+    argmax shift (global / windowed): -0 / -0 ms
+
+================ GATES (selected electrodes) ================
+Verdicts: PASS / FAIL only when the 90% interval of the observed rate (or bias) is entirely on one side of the threshold;
+          INCONCLUSIVE = within Monte-Carlo error, more seeds needed.
+
+
+[hg snr=0.005]
+  (i) null coverage of 0: [0.87 0.97 0.93] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE'];  false-positive rate [0.13 0.03 0.07] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE']   (seeds=30)
+  (ii) gain    : bias [-0.116 -1.401  0.006] (+/-[0.016 1.172 0.009]) vs tolerance [0.03 3.   0.03] -> gain:FAIL, shift:PASS, width:PASS
+       (iii) specificity: false-mechanism rate {'shift': 0.07, 'width': 0.03} -> ['INCONCLUSIVE', 'PASS'];  power(gain) 0.17;  recovery est/truth 0.26
+  (ii) latency : bias [-0.012 -4.73   0.011] (+/-[0.014 1.187 0.007]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:FAIL, width:PASS
+       (iii) specificity: false-mechanism rate {'gain': 0.17, 'width': 0.03} -> ['INCONCLUSIVE', 'PASS'];  power(shift) 0.83;  recovery est/truth 0.64
+  (ii) width   : bias [-0.008 -1.714 -0.091] (+/-[0.014 1.145 0.008]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 0.17, 'shift': 0.1} -> ['INCONCLUSIVE', 'INCONCLUSIVE'];  power(width) 0.50;  recovery est/truth 0.30
+
+[hg snr=0.03]
+  (i) null coverage of 0: [0.87 0.93 0.9 ] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE'];  false-positive rate [0.13 0.07 0.1 ] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE']   (seeds=30)
+  (ii) gain    : bias [-1.000e-03 -1.595e+00  3.400e-02] (+/-[0.012 0.85  0.008]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:INCONCLUSIVE
+       (iii) specificity: false-mechanism rate {'shift': 0.0, 'width': 0.5} -> ['PASS', 'FAIL'];  power(gain) 0.97;  recovery est/truth 0.99
+  (ii) latency : bias [-0.033 -1.952  0.032] (+/-[0.006 0.727 0.005]) vs tolerance [0.03 3.   0.03] -> gain:INCONCLUSIVE, shift:PASS, width:INCONCLUSIVE
+       (iii) specificity: false-mechanism rate {'gain': 0.63, 'width': 0.6} -> ['FAIL', 'FAIL'];  power(shift) 1.00;  recovery est/truth 0.85
+  (ii) width   : bias [ 0.005  0.506 -0.054] (+/-[0.005 0.56  0.006]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 0.13, 'shift': 0.2} -> ['INCONCLUSIVE', 'INCONCLUSIVE'];  power(width) 0.93;  recovery est/truth 0.58
+
+[hg snr=0.2]
+  (i) null coverage of 0: [0.83 0.83 0.87] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE'];  false-positive rate [0.17 0.17 0.13] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE']   (seeds=30)
+  (ii) gain    : bias [ 0.001 -0.412  0.013] (+/-[0.002 0.075 0.002]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:PASS
+       (iii) specificity: false-mechanism rate {'shift': 0.77, 'width': 0.87} -> ['FAIL', 'FAIL'];  power(gain) 1.00;  recovery est/truth 1.01
+  (ii) latency : bias [-0.026 -1.697  0.039] (+/-[0.002 0.148 0.002]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 0.97, 'width': 1.0} -> ['FAIL', 'FAIL'];  power(shift) 1.00;  recovery est/truth 0.86
+  (ii) width   : bias [ 0.015  2.065 -0.045] (+/-[0.001 0.118 0.002]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 1.0, 'shift': 0.97} -> ['FAIL', 'FAIL'];  power(width) 1.00;  recovery est/truth 0.64
+
+[lfp snr=0.005]
+  (i) null coverage of 0: [0.93 0.9  0.93] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE'];  false-positive rate [0.07 0.1  0.07] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE']   (seeds=30)
+  (ii) gain    : bias [-0.114 -1.251  0.011] (+/-[0.014 1.278 0.009]) vs tolerance [0.03 3.   0.03] -> gain:FAIL, shift:PASS, width:PASS
+       (iii) specificity: false-mechanism rate {'shift': 0.13, 'width': 0.1} -> ['INCONCLUSIVE', 'INCONCLUSIVE'];  power(gain) 0.13;  recovery est/truth 0.24
+  (ii) latency : bias [-0.009 -4.937  0.007] (+/-[0.014 1.309 0.007]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:FAIL, width:PASS
+       (iii) specificity: false-mechanism rate {'gain': 0.0, 'width': 0.13} -> ['PASS', 'INCONCLUSIVE'];  power(shift) 0.57;  recovery est/truth 0.60
+  (ii) width   : bias [-0.007 -1.202 -0.093] (+/-[0.013 1.093 0.01 ]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 0.1, 'shift': 0.07} -> ['INCONCLUSIVE', 'INCONCLUSIVE'];  power(width) 0.30;  recovery est/truth 0.25
+
+[lfp snr=0.03]
+  (i) null coverage of 0: [0.9  0.9  0.93] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE'];  false-positive rate [0.1  0.1  0.07] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE']   (seeds=30)
+  (ii) gain    : bias [-0.011 -2.315  0.032] (+/-[0.009 0.741 0.006]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:INCONCLUSIVE, width:INCONCLUSIVE
+       (iii) specificity: false-mechanism rate {'shift': 0.1, 'width': 0.33} -> ['INCONCLUSIVE', 'FAIL'];  power(gain) 0.93;  recovery est/truth 0.93
+  (ii) latency : bias [-0.031 -2.522  0.025] (+/-[0.005 0.718 0.005]) vs tolerance [0.03 3.   0.03] -> gain:INCONCLUSIVE, shift:INCONCLUSIVE, width:INCONCLUSIVE
+       (iii) specificity: false-mechanism rate {'gain': 0.6, 'width': 0.47} -> ['FAIL', 'FAIL'];  power(shift) 0.90;  recovery est/truth 0.79
+  (ii) width   : bias [ 0.002  0.112 -0.057] (+/-[0.005 0.657 0.006]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 0.13, 'shift': 0.23} -> ['INCONCLUSIVE', 'INCONCLUSIVE'];  power(width) 0.83;  recovery est/truth 0.53
+
+[lfp snr=0.2]
+  (i) null coverage of 0: [0.9  0.93 0.9 ] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE'];  false-positive rate [0.1  0.07 0.1 ] -> ['INCONCLUSIVE', 'INCONCLUSIVE', 'INCONCLUSIVE']   (seeds=30)
+  (ii) gain    : bias [ 0.    -0.436  0.013] (+/-[0.002 0.078 0.002]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:PASS
+       (iii) specificity: false-mechanism rate {'shift': 0.77, 'width': 0.87} -> ['FAIL', 'FAIL'];  power(gain) 1.00;  recovery est/truth 1.00
+  (ii) latency : bias [-0.026 -1.709  0.038] (+/-[0.002 0.159 0.002]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 0.97, 'width': 1.0} -> ['FAIL', 'FAIL'];  power(shift) 1.00;  recovery est/truth 0.86
+  (ii) width   : bias [ 0.015  2.033 -0.045] (+/-[0.001 0.12  0.002]) vs tolerance [0.03 3.   0.03] -> gain:PASS, shift:PASS, width:FAIL
+       (iii) specificity: false-mechanism rate {'gain': 0.97, 'shift': 0.97} -> ['FAIL', 'FAIL'];  power(width) 1.00;  recovery est/truth 0.64
+
+Until (ii) AND (iii) PASS for all mechanisms, only 'surprisal modulates the response' (M1 vs M0) may be claimed -- not which mechanism.

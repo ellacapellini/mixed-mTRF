@@ -16,6 +16,10 @@ Design:
   duplicate rows. Ctrl-C is safe.
 * Each job runs single-threaded numerics (OMP/OPENBLAS/MKL = 1); parallelism comes from running jobs side by side.
 * Logs: logs/local/<job>.out and .err
+* HEAT (laptops): use fewer cores (--cpus 3), a time budget per session (--max-hours 2), a pause between job starts
+  (--cooldown-s 30), lower priority (--nice, default 10), and the thermal guard (macOS only, default on): before starting
+  a job it reads `pmset -g therm` and waits while macOS reports CPU speed limiting. Work is chunked per
+  (seed, band, SNR) job, so stopping and resuming costs at most the jobs in flight.
 """
 from __future__ import annotations
 
@@ -27,10 +31,13 @@ import time
 from dataclasses import dataclass, field
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-FIG = os.path.join(ROOT, "figures")
-DONE = os.path.join(FIG, "done")
+RES = os.path.join(ROOT, "results")
+FIG = os.path.join(RES, "stage1")      # stage-1 result files (jsonl)
+FIG2 = os.path.join(RES, "stage2")     # stage-2 (Bayesian ladder) result files
+DONE = os.path.join(RES, "done")       # one marker per finished job (resume)
 LOGS = os.path.join(ROOT, "logs", "local")
 PY = sys.executable
+MOD = [PY, "-m", "mixed_trf"]                       # the package is run from <ROOT>/src (see launch())
 
 
 @dataclass
@@ -57,13 +64,13 @@ def parse_range(s):
 def build_jobs(a):
     jobs = []
     if "smoke" in a.only:
-        jobs.append(Job("smoke", [PY, "-m", "models.bayesian_pop_trf"], cpus=2, mem_gb=3))
+        jobs.append(Job("smoke", MOD + ["selftest"], cpus=2, mem_gb=3))
     if "testbed" in a.only:
         extra = a.testbed_args.split() if a.testbed_args else []
         for seed in parse_range(a.seeds):
             for snr in [x for x in a.snrs.split(",")]:
                 out = os.path.join(FIG, f"testbed_snr{snr}_task{seed}.jsonl")
-                cmd = [PY, "erp_testbed.py", "--modes", "null", "gain", "latency", "width", "--reps", "1",
+                cmd = MOD + ["testbed", "--modes", "null", "gain", "latency", "width", "--reps", "1",
                        "--seed", str(seed), "--n_patients", "8", "--n_electrodes", "4", "--n_times", "720000",
                        "--snr", snr, "--noise", "pink", "--common_noise", "0.3", "--effect_frac", "0.7",
                        "--shared_stimulus", "--boot", "200"] + extra
@@ -75,14 +82,34 @@ def build_jobs(a):
                 for snr in a.snrs.split(","):
                     name = f"ieeg1{a.tag}_{band}_snr{snr}_seed{seed}"
                     out = os.path.join(FIG, name + ".jsonl")
-                    cmd = [PY, "ieeg_stage1.py", "--band", band, "--snr", snr, "--seed", str(seed)] + extra
+                    cmd = MOD + ["stage1", "--band", band, "--snr", snr, "--seed", str(seed)] + extra
                     jobs.append(Job(name, cmd, cpus=1, mem_gb=a.ieeg_mem_gb, out=out))
     if "smoothness" in a.only:
-        for h in ("amplitude", "hyperparameter"):
-            out = os.path.join(FIG, f"smooth_{h}.jsonl")
-            cmd = [PY, "smoothness_recovery_test.py", "--hierarchy", h, "--chains", "4"] + (
-                a.smooth_args.split() if a.smooth_args else [])
-            jobs.append(Job(f"smoothness_{h}", cmd, cpus=4, mem_gb=6, out=out))
+        for model in ("B-pop-amp", "B-pop-hyp"):
+            out = os.path.join(FIG2, f"smooth_{model}.jsonl")
+            cmd = MOD + ["stage2", "--model", model, "--mode", "null", "--patient_width_sd", "0.45", "--n_patients", "6",
+                         "--chains", "4"] + (a.smooth_args.split() if a.smooth_args else [])
+            jobs.append(Job(f"smoothness_{model}", cmd, cpus=4, mem_gb=6, out=out))
+    if "ladder" in a.only:        # one model x one simulated effect x one seed per job (one model at a time)
+        extra = a.stage2_args.split() if a.stage2_args else []
+        for seed in parse_range(a.seeds):
+            for model in a.models.split(","):
+                for mode in a.modes.split(","):
+                    name = f"ladder{a.tag}_{model}_{mode}_seed{seed}"
+                    cmd = MOD + ["stage2", "--model", model, "--mode", mode, "--seed", str(seed)] + extra
+                    jobs.append(Job(name, cmd, cpus=a.stage2_cpus, mem_gb=a.stage2_mem_gb,
+                                    out=os.path.join(FIG2, name + ".jsonl")))
+    if "learning" in a.only:      # data-efficiency + sequential updating: refit with more data / more patients
+        extra = a.stage2_args.split() if a.stage2_args else []
+        for seed in parse_range(a.seeds):
+            for model in a.models.split(","):
+                for nt in a.n_times_list.split(","):
+                    for k in a.fit_patients_list.split(","):
+                        name = f"learn{a.tag}_{model}_nt{nt}_k{k}_seed{seed}"
+                        cmd = MOD + ["stage2", "--model", model, "--mode", a.modes.split(",")[0], "--seed", str(seed),
+                                     "--n_times", nt, "--fit_patients", k]
+                        jobs.append(Job(name, cmd + extra, cpus=a.stage2_cpus, mem_gb=a.stage2_mem_gb,
+                                        out=os.path.join(FIG2, name + ".jsonl")))
     return jobs
 
 
@@ -103,7 +130,23 @@ def detect_resources():
     return cpus, mem
 
 
-def launch(job):
+def thermal_limited():
+    """True if macOS reports the CPU is being speed-limited. Silent no-op on other systems / if unparsable."""
+    if sys.platform != "darwin":
+        return False
+    try:
+        out = subprocess.run(["pmset", "-g", "therm"], capture_output=True, text=True, timeout=5).stdout
+        for line in out.splitlines():
+            if "CPU_Speed_Limit" in line or "CPU_Scheduler_Limit" in line:
+                val = int(line.split("=")[1].strip())
+                if val < 100:
+                    return True
+    except Exception:
+        return False
+    return False
+
+
+def launch(job, nice=10):
     os.makedirs(LOGS, exist_ok=True)
     env = dict(os.environ, OMP_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1",
                PYTHONUNBUFFERED="1", **job.env)
@@ -115,7 +158,9 @@ def launch(job):
         cmd += ["--out", part]
     fo = open(os.path.join(LOGS, job.name + ".out"), "w")
     fe = open(os.path.join(LOGS, job.name + ".err"), "w")
-    p = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=fo, stderr=fe)
+    pre = (lambda: os.nice(nice)) if (nice and hasattr(os, 'nice')) else None
+    env["PYTHONPATH"] = os.path.join(ROOT, "src") + os.pathsep + env.get("PYTHONPATH", "")
+    p = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=fo, stderr=fe, preexec_fn=pre)
     return p, fo, fe
 
 
@@ -134,7 +179,7 @@ def finalize(job, rc):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--only", nargs="+", default=["testbed"], choices=["smoke", "testbed", "smoothness", "ieeg1"])
+    ap.add_argument("--only", nargs="+", default=["testbed"], choices=["smoke", "testbed", "smoothness", "ieeg1", "ladder", "learning"])
     ap.add_argument("--seeds", default="0-99")
     ap.add_argument("--snrs", default="0.005,0.03,0.2")
     ap.add_argument("--cpus", type=int, default=None, help="cores to use (default: all but one)")
@@ -146,6 +191,18 @@ def main():
     ap.add_argument("--ieeg-mem-gb", type=float, default=3.0, help="declared RAM per ieeg1 job (256 electrodes needs ~2x the 128-electrode value)")
     ap.add_argument("--ieeg-args", default="", help="extra args for ieeg1 jobs (e.g. --electrodes 256)")
     ap.add_argument("--smooth-args", default="", help="extra args for smoothness jobs")
+    ap.add_argument("--max-hours", type=float, default=None,
+                    help="stop STARTING new jobs after this many hours (running jobs finish); resume later with the same command")
+    ap.add_argument("--cooldown-s", type=float, default=0.0, help="minimum seconds between job starts (spreads the heat load)")
+    ap.add_argument("--nice", type=int, default=10, help="process niceness for jobs (higher = lower priority)")
+    ap.add_argument("--no-thermal-guard", action="store_true", help="do not wait when macOS reports CPU throttling")
+    ap.add_argument("--models", default="A-pop,B-pop-amp,B-pop-hyp", help="ladder/learning: models, one job each")
+    ap.add_argument("--modes", default="null,gain,latency,width", help="ladder: simulated effects (learning uses the first)")
+    ap.add_argument("--stage2-args", default="", help="extra args for stage-2 jobs (e.g. --n_patients 8 --draws 1000)")
+    ap.add_argument("--stage2-cpus", type=int, default=4)
+    ap.add_argument("--stage2-mem-gb", type=float, default=6.0)
+    ap.add_argument("--n-times-list", default="12000,24000,48000,96000", help="learning: recording lengths (samples at 100 Hz)")
+    ap.add_argument("--fit-patients-list", default="2,4,6", help="learning: number of patients in the fit")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--max-jobs", type=int, default=None, help="stop after launching this many jobs (for trials)")
@@ -173,6 +230,7 @@ def main():
         pending = pending[: a.max_jobs]
 
     running, cpu_used, mem_used = [], 0, 0.0
+    last_start, stopped_by_budget, throttled_since = 0.0, False, None
     times, n_total, failed = [], len(pending), []
     t_start = time.time()
     try:
@@ -194,14 +252,32 @@ def main():
                 eta = avg * left / max(1, min(len(running) + 1, cpus // max(1, job.cpus)))
                 print(f"[{time.strftime('%H:%M:%S')}] {'DONE ' if ok else 'FAIL '} {job.name}  ({times[-1] / 60:.1f} min)  "
                       f"finished {finished}/{n_total}  running {len(running)}  rough ETA {eta / 3600:.1f} h", flush=True)
-            while pending and cpu_used + pending[0].cpus <= cpus and mem_used + pending[0].mem_gb <= mem:
+            if a.max_hours and not stopped_by_budget and (time.time() - t_start) > a.max_hours * 3600:
+                stopped_by_budget = True
+                print(f"[{time.strftime('%H:%M:%S')}] time budget of {a.max_hours} h reached: no new jobs; "
+                      f"waiting for {len(running)} running job(s). Re-run the same command later to continue.", flush=True)
+            can_start = (not stopped_by_budget) and (time.time() - last_start >= a.cooldown_s)
+            if can_start and not a.no_thermal_guard and pending and thermal_limited():
+                if throttled_since is None:
+                    throttled_since = time.time()
+                    print(f"[{time.strftime('%H:%M:%S')}] macOS reports CPU throttling: waiting before starting more jobs", flush=True)
+                can_start = False
+            elif throttled_since is not None and not thermal_limited():
+                print(f"[{time.strftime('%H:%M:%S')}] throttling cleared after {(time.time() - throttled_since) / 60:.1f} min", flush=True)
+                throttled_since = None
+            while can_start and pending and cpu_used + pending[0].cpus <= cpus and mem_used + pending[0].mem_gb <= mem:
                 job = pending.pop(0)
-                p, fo, fe = launch(job)
+                last_start = time.time()
+                p, fo, fe = launch(job, a.nice)
                 running.append((job, p, fo, fe, time.time()))
                 cpu_used += job.cpus; mem_used += job.mem_gb
                 print(f"[{time.strftime('%H:%M:%S')}] start {job.name}", flush=True)
-            if pending and not running:
-                print("Nothing can start with this budget; stopping."); break
+                if a.cooldown_s > 0:
+                    break
+            if stopped_by_budget and not running:
+                print(f"{len(pending)} job(s) left unstarted: run the same command again to continue."); break
+            if pending and not running and (pending[0].cpus > cpus or pending[0].mem_gb > mem):
+                print("The next job needs more cores/RAM than your budget allows; stopping."); break
             time.sleep(2)
     except KeyboardInterrupt:
         print("\nInterrupted: stopping running jobs (unfinished ones restart next time).")

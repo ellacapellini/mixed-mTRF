@@ -1,0 +1,4 @@
+[null    ] truth(sel) g 0.00 sh 0.0 w 0.00 | est g +0.001 sh -0.0 w +0.001  CI-cover [True, True, True] | sel precision 0.97 noise-corr(sel) 0.30 | LOPO dR2 sel -0.00001 all +0.00002 | argmax glob/win 0/0 | 12s
+[gain    ] truth(sel) g 0.18 sh 0.0 w 0.00 | est g +0.178 sh -0.4 w +0.019  CI-cover [True, False, False] | sel precision 0.97 noise-corr(sel) 0.30 | LOPO dR2 sel +0.00576 all +0.00014 | argmax glob/win 0/0 | 12s
+[latency ] truth(sel) g 0.00 sh 14.7 w 0.00 | est g -0.031 sh +12.6 w +0.048  CI-cover [False, True, False] | sel precision 0.97 noise-corr(sel) 0.30 | LOPO dR2 sel +0.00269 all +0.00007 | argmax glob/win 20/20 | 12s
+[width   ] truth(sel) g 0.00 sh 0.0 w 0.15 | est g +0.020 sh +2.5 w +0.094  CI-cover [False, False, False] | sel precision 0.97 noise-corr(sel) 0.30 | LOPO dR2 sel +0.00298 all +0.00008 | argmax glob/win 0/0 | 12s

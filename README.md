@@ -1,13 +1,62 @@
-# mixed-mTRF
-Work in progress. This repository documents my research project at the 
-Neural Dynamics Lab (INI, University of Zurich), supervised by Prof. Dr. Tim Proix.
+# mixed-trf
 
-## What this is about
-The standard **multivariate Temporal Response Function (mTRF)** is a powerful tool for modelling how the brain responds to continuous speech, but it makes a fundamental *assumption*: the response has the same shape and timing for every word, *every time*. Only the amplitude scales.That's probably wrong. We know from the N400 literature that predictable words are processed faster — the response peaks earlier, not just smaller. Lalor (2024) showed this directly using a **Dynamic TRF framework** that lets the TRF shape deform word-by-word as a *function of surprisal*. Elegant, but it requires *committing to a parametric form* (a Gaussian template + a shallow linear net) and *doesn't* give you uncertainty over the TRF shape itself. The **hypothesis** here is that you can achieve the same thing — and do it more principally — by combining the mTRF with a Bayesian framework, specifically GP priors. Instead of a single fixed TRF, we should get a posterior distribution over TRF shapes that can naturally vary with context. No need to hard-code the template. No need to assume the relationship between surprisal and latency is linear. And we should get honest uncertainty at every lag.
+Hierarchical (mixed) temporal-response-function models for how word **surprisal modulates neural responses**
+(iEEG, Proix lab), plus the simulation and validation machinery used to decide what can be claimed.
 
-## Context
-This sits within a broader question: how does visual speech info 
-modulate neural responses over and above the acoustic signal, and does visual predictability shift the timing of audiovisual integration the way lexical surprisal shifts the N400?
+    h(tau | surprisal) = h0(tau) + h1(tau) * surprisal
 
-## Literature
-Papers I'm reading for this project are tracked here: [[Google Sheets link](https://docs.google.com/spreadsheets/d/1s1F4kjrW1S360toRWma7SZhZf7wZuIoeAkWX1L1ZRWU/edit?usp=sharing)]
+## Install
+    python3.12 -m venv .venv && source .venv/bin/activate
+    pip install -e ".[bayes,dev]"          # bayes = PyMC (Stage 2 only); Stage 1 needs only numpy/scipy/matplotlib
+
+## One model at a time
+    python -m mixed_trf models                                   # the ladder
+    python -m mixed_trf stage2 --model A-pop     --mode gain --seed 0
+    python -m mixed_trf stage2 --model B-pop-amp --mode gain --seed 0
+    python -m mixed_trf stage2 --model B-pop-hyp --mode gain --seed 0 --patient_width_sd 0.45
+
+| model | what it adds over the previous one |
+|---|---|
+| `A-pop` | raised-cosine basis; weights pooled over patients/electrodes (Model A) |
+| `B-pop-amp` | GP prior on h(tau) instead of a basis; amplitude pooled; **one** shared length scale |
+| `B-pop-hyp` | GP deviations whose length scale and amplitude are hierarchical (patients differ in smoothness) + population-mean GP |
+
+All three share the same hierarchy, priors and **exact Gaussian likelihood from per-unit sufficient statistics**
+(X'X, X'y, y'y), so cost does not depend on recording length. GP draws are non-centred (h = Lz).
+
+## Two stages
+* **Stage 1** (fast, no MCMC): simulate 100-256-electrode iEEG with spatial noise correlation, select responsive
+  electrodes on dev data, estimate gain / shift / width of the surprisal effect (first-order or binned estimator),
+  patient-level t-intervals, leave-one-patient-out. `python -m mixed_trf stage1 --help`
+* **Stage 2** (Bayesian ladder above): convergence judged on *functionals* (population TRF), decomposition with
+  posterior intervals, held-out-patient prediction, and learning-evolution outputs.
+
+Also: `python -m mixed_trf testbed` (single-electrode-family ERP testbed), `summarize` (gates / verdicts),
+`plot-learning` (figures below).
+
+## Learning-evolution plots
+    python -m mixed_trf plot-learning "results/*/learn*.jsonl" "results/*/ladder*.jsonl" --out figures
+* `learning_convergence.png` - R-hat / ESS of h_pop vs fraction of draws (has the sampler converged?)
+* `learning_data.png` - error and interval width vs minutes of data (data efficiency)
+* `learning_sequential.png` - estimate and 90 % interval as patients are added (sequential updating)
+
+## Running the big jobs
+`run_local.py` is a resumable launcher for one machine (thermal guard, cooldown, nice, `--max-hours`); `scripts/slurm/*.sh`
+are the Euler equivalents. **The order of work for the final run is in `docs/BIG_RUN.md`.**
+
+    python run_local.py --status
+    python run_local.py --only ieeg1 --seeds 0-9 --cpus 4 --max-hours 3
+    python run_local.py --only ladder --seeds 0-4 --models A-pop,B-pop-amp,B-pop-hyp --stage2-args "--n_patients 8 --n_electrodes 4 --n_times 144000"
+    python run_local.py --only learning --seeds 0-2 --models B-pop-amp
+
+## Tests
+    pytest        # stage-1 (first-order / binned / rhythm) and the summarizer reproduce the pre-refactor results bit-for-bit
+                  # (timings excluded); Bayesian likelihood identity; registry checks
+
+## Layout
+    src/mixed_trf/   the package (models, estimators, simulation, core, evaluation, stage1, experiments, cli)
+    run_local.py     resumable single-machine launcher          scripts/slurm/   Euler job scripts
+    scripts/*.py     old script names as thin wrappers          tests/           regression tests + fixtures
+    results/         stage1/ (jsonl per job), stage2/, summaries/ (text summaries), done/ (resume markers)
+    legacy/          Sections 1-10 (recovery grid, identifiability, 7-model comparison, old Models A/B); run from inside legacy/
+    docs/            analysis_plan.md (pre-specified gates), BIG_RUN.md (what to run, in order), FILES.md
