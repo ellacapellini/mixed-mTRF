@@ -61,15 +61,22 @@ from .kernels_pt import _build_kernel_pt
 
 
 # ------------------------------------------------------------ sufficient stats
-def prepare_suffstats(designs, ys):
-    """designs: list of (n_i x p) arrays/sparse; ys: list of (n_i,). Standardises each y.
+def prepare_suffstats(designs, ys, center_design=True):
+    """designs: list of (n_i x p) arrays/sparse; ys: list of (n_i,). Standardises (centres) each y.
+    center_design=True also centres the design columns, i.e. profiles out a free intercept per unit. WITHOUT this the
+    centred y forces a constant offset onto h0 (h0 + c at every lag): the baseline response is biased and every
+    ratio built on it (gain) is wrong, while h1 (zero-mean predictor) is unaffected.
     Returns dict with XtX (U,p,p), Xty (U,p), yty (U,), n (U,), y_scale (U,)."""
     XtX, Xty, yty, n, scale = [], [], [], [], []
     for X, y in zip(designs, ys):
         y = np.asarray(y, float)
         sd = y.std()
         ysd = (y - y.mean()) / sd
-        XtX.append(np.asarray((X.T @ X).todense()) if sp.issparse(X) else X.T @ X)
+        G = np.asarray((X.T @ X).todense()) if sp.issparse(X) else X.T @ X
+        if center_design:                                  # X_c'X_c = X'X - s s'/n ;  X_c'y = X'y  (y is zero-mean)
+            cs = np.asarray(X.sum(axis=0)).ravel()
+            G = G - np.outer(cs, cs) / len(ysd)
+        XtX.append(G)
         Xty.append(np.asarray(X.T @ ysd).ravel())
         yty.append(float(ysd @ ysd)); n.append(len(ysd)); scale.append(sd)
     return {"XtX": np.array(XtX), "Xty": np.array(Xty), "yty": np.array(yty),

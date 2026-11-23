@@ -68,11 +68,12 @@ def run(a):
 
     t0 = time.time()
     res = fit(a.model, sub, pat, taus, draws=a.draws, tune=a.tune, chains=a.chains, cores=a.cores, seed=a.seed,
-              target_accept=a.target_accept)
+              target_accept=a.target_accept,
+              **{k: v for k, v in (("n_basis", a.n_basis), ("basis_c", a.basis_c), ("ell0", a.ell0)) if v is not None})
     tr = res.trace
     hp = res.h_pop.mean(axis=(0, 1))                                    # (2, L)
     g, sh, om, _ = decompose(hp[0], hp[1], taus)
-    row = {"model": a.model, "mode": a.mode, "seed": a.seed, "snr": a.snr, "n_patients": a.n_patients,
+    row = {"n_basis": a.n_basis, "basis_c": a.basis_c, "ell0": a.ell0, "model": a.model, "mode": a.mode, "seed": a.seed, "snr": a.snr, "n_patients": a.n_patients,
            "fit_patients": int(a.fit_patients or a.n_patients), "n_electrodes": a.n_electrodes,
            "n_times": a.n_times, "holdout": a.holdout, "elapsed_s": time.time() - t0,
            "n_divergences": int(tr.sample_stats["diverging"].sum()), "bfmi": _bfmi(tr),
@@ -130,6 +131,9 @@ def build_parser():
     ap.add_argument("--chains", type=int, default=4)
     ap.add_argument("--cores", type=int, default=None)
     ap.add_argument("--target_accept", type=float, default=0.9)
+    ap.add_argument("--n_basis", type=int, default=None, help="A-pop: number of raised-cosine basis functions (default 10)")
+    ap.add_argument("--basis_c", type=float, default=None, help="A-pop: raised-cosine log-warping constant (default 5)")
+    ap.add_argument("--ell0", type=float, default=None, help="B models: prior centre of the length scale in ms (default 100)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None)
     return ap
