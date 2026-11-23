@@ -1,0 +1,11 @@
+numpy
+scipy
+matplotlib
+
+[bayes]
+pymc>=5
+arviz
+pytensor
+
+[dev]
+pytest

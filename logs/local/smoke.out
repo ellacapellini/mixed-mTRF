@@ -1,0 +1,3 @@
+[1] likelihood identity: direct -892.976236  suffstats -892.976236  |diff| 5.68e-13
+[2] fit ok in 53s  divergences 0  max R-hat(h_pop) 1.056
+    decomposition from posterior-mean population TRF: gain +0.38 (truth 0.30)  shift +0.4 ms (0)  width +0.12 (0)

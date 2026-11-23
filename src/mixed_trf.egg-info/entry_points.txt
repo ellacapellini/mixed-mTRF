@@ -1,0 +1,2 @@
+[console_scripts]
+mixed-trf = mixed_trf.cli:main

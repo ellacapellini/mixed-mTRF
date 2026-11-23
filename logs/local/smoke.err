@@ -1,1 +1,7 @@
-/Users/ellacapellini/mixed-trf-venv/bin/python: No module named models.bayesian_pop_trf
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [log_ell_0, log_sd_pop_0, sd_pat_0, sd_el_0, log_ell_1, log_sd_pop_1, sd_pat_1, sd_el_1, z_pop, z_pat, z_el, mu_log_noise, tau_log_noise, z_noise]
+Sampling 2 chains for 250 tune and 150 draw iterations (500 + 300 draws total) took 33 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details

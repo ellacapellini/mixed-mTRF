@@ -1,4 +1,4 @@
-"""Regression tests: the refactored package must reproduce the legacy scripts' results BIT-FOR-BIT.
+"""Regression tests: the refactored package must reproduce the legacy scripts' results (floats to rel 1e-6; everything else exactly).
 Fixtures were produced by the pre-refactor erp_testbed.py / ieeg_stage1.py / summarize_ieeg1.py."""
 import json
 import pathlib
@@ -20,6 +20,23 @@ def _strip(x):
     return x
 
 
+def _assert_close(a, b, path="row", rel=1e-6, abs_=1e-9):
+    """Same structure; ints/bools/strings exactly equal; floats equal to a tight tolerance.
+    (Exact float equality is not portable: Linux and Apple-silicon BLAS differ in the last digits.)"""
+    if isinstance(a, dict):
+        assert a.keys() == b.keys(), f"{path}: keys differ"
+        for k in a:
+            _assert_close(a[k], b[k], f"{path}.{k}", rel, abs_)
+    elif isinstance(a, list):
+        assert len(a) == len(b), f"{path}: length differs"
+        for i, (x, y) in enumerate(zip(a, b)):
+            _assert_close(x, y, f"{path}[{i}]", rel, abs_)
+    elif isinstance(a, float) or isinstance(b, float):
+        assert a == pytest.approx(b, rel=rel, abs=abs_), f"{path}: {a} != {b}"
+    else:
+        assert a == b, f"{path}: {a!r} != {b!r}"
+
+
 def _rows(path):
     return [_strip(json.loads(l)) for l in open(path) if l.strip()]
 
@@ -33,7 +50,7 @@ def test_stage1_matches_legacy(tmp_path, name, extra):
     from mixed_trf.stage1.pipeline import main
     out = tmp_path / "o.jsonl"
     main(BASE + extra + ["--out", str(out)])
-    assert _rows(out) == _rows(FIX / f"{name}.jsonl")
+    _assert_close(_rows(out), _rows(FIX / f"{name}.jsonl"))
 
 
 def test_summarizer_matches_legacy(tmp_path):
